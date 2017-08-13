@@ -1,4 +1,8 @@
-import './main.css';
-import { Main } from './Main.elm';
+import "./main.css";
+import { Main } from "./Main.elm";
 
-const app = Main.embed(document.getElementById('root'));
+import unread from "./unread.json";
+
+const app = Main.embed(document.getElementById("root"), {
+  unread
+});

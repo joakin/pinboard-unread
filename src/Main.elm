@@ -1,19 +1,36 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, img)
-import Html.Attributes exposing (src)
+import Html exposing (..)
+import Html.Attributes exposing (..)
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    {}
+    { unread : List Bookmark }
 
 
-init : ( Model, Cmd Msg )
-init =
-    ( {}, Cmd.none )
+type alias Bookmark =
+    { description : String
+    , extended : String
+    , hash : String
+    , href : String
+    , shared : String
+    , tags : String
+    , time : String
+    , toread : String
+    }
+
+
+type alias Flags =
+    { unread : List Bookmark
+    }
+
+
+init : Flags -> ( Model, Cmd Msg )
+init { unread } =
+    ( { unread = unread }, Cmd.none )
 
 
 
@@ -34,20 +51,27 @@ update msg model =
 
 
 view : Model -> Html Msg
-view model =
-    div []
-        [ img [ src "/logo.svg" ] []
-        , div [] [ text "Your Elm App is working!" ]
+view { unread } =
+    div [ class "App" ]
+        [ h1 [] [ text "Unread bookmarks" ]
+
+        -- , section [] <| List.map viewBookmark unread
         ]
+
+
+viewBookmark : Bookmark -> Html Msg
+viewBookmark bookmark =
+    div []
+        [ h3 [] [ text bookmark.description ] ]
 
 
 
 ---- PROGRAM ----
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Html.programWithFlags
         { view = view
         , init = init
         , update = update

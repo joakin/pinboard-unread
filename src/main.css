@@ -1,0 +1,12 @@
+body {
+  font-family: sans-serif;
+  font-size: 1.2em;
+  margin: 0;
+  text-align: center;
+  color: #293c4b;
+}
+
+img {
+  margin: 20px 0;
+  max-width: 200px;
+}

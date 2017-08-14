@@ -55,3 +55,12 @@ a {
   background-color: #fff9d2;
   padding: 0.1em 0.5em;
 }
+
+.unread-tags {
+  line-height: 1.5em;
+  font-size: 0.7em;
+  margin-bottom: 1rem;
+}
+.unread-tags>.tag {
+  margin-right: 0.5em;
+}

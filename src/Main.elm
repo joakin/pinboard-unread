@@ -11,7 +11,7 @@ type alias Model =
     { unread : List Bookmark }
 
 
-type alias Bookmark =
+type alias BookmarkJSON =
     { description : String
     , extended : String
     , hash : String
@@ -23,14 +23,37 @@ type alias Bookmark =
     }
 
 
+type alias Bookmark =
+    { description : String
+    , extended : String
+    , href : String
+    , tags : List String
+    , toread : Bool
+    }
+
+
 type alias Flags =
-    { unread : List Bookmark
+    { unread : List BookmarkJSON
     }
 
 
 init : Flags -> ( Model, Cmd Msg )
 init { unread } =
-    ( { unread = unread }, Cmd.none )
+    ( { unread = List.map bookmarkFromJSON unread }, Cmd.none )
+
+
+bookmarkFromJSON : BookmarkJSON -> Bookmark
+bookmarkFromJSON bj =
+    { description = bj.description
+    , extended = bj.extended
+    , href = bj.href
+    , tags =
+        if String.isEmpty bj.tags then
+            []
+        else
+            String.words bj.tags
+    , toread = bj.toread == "yes"
+    }
 
 
 
@@ -52,21 +75,31 @@ update msg model =
 
 view : Model -> Html Msg
 view { unread } =
-    div [ class "App" ]
+    div [ class "app" ]
         [ h1 [] [ text "Unread bookmarks" ]
-
-        -- , section [] <| List.map viewBookmark unread
+        , section [] <| List.map viewBookmark unread
         ]
 
 
 viewBookmark : Bookmark -> Html Msg
 viewBookmark bookmark =
-    div []
-        [ h3 [] [ text bookmark.description ] ]
-
-
-
----- PROGRAM ----
+    div [ class "bookmark" ]
+        [ div [ class "bookmark-header" ]
+            [ a
+                [ href bookmark.href
+                , target "_blank"
+                , title bookmark.description
+                , class "bookmark-header-link"
+                ]
+                [ text
+                    bookmark.description
+                ]
+            ]
+        , div [ class "bookmark-separator" ] []
+        , div [ class "bookmark-description" ] [ text bookmark.extended ]
+        , div [ class "bookmark-separator" ] []
+        , div [ class "bookmark-footer" ] <| List.map (\t -> span [] [ text ("[" ++ t ++ "]") ]) bookmark.tags
+        ]
 
 
 main : Program Flags Model Msg

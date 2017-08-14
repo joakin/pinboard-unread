@@ -5,8 +5,36 @@ body {
   color: #293c4b;
 }
 
-.App {
+a {
+  color: #0077c7;
+  text-decoration: none;
+}
+
+.app {
   max-width: 80ex;
   padding: 0em 2em;
   margin: auto;
+}
+
+.bookmark {
+  box-shadow: 0 2px 1px rgba(0,0,0,0.1);
+  margin-bottom: 1em;
+}
+.bookmark-header {}
+.bookmark-header-link {
+  display: block;
+  padding: 0.5rem 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bookmark-separator {
+  display: block;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  width: 100%;
+  height: 0px;
+}
+.bookmark-description, .bookmark.footer {
+  display: block;
+  min-height: 1rem;
 }

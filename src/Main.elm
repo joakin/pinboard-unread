@@ -2,13 +2,16 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Set exposing (Set)
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    { unread : List Bookmark }
+    { unread : List Bookmark
+    , tags : Set String
+    }
 
 
 type alias BookmarkJSON =
@@ -39,7 +42,21 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Msg )
 init { unread } =
-    ( { unread = List.map bookmarkFromJSON unread }, Cmd.none )
+    let
+        bookmarks =
+            List.map bookmarkFromJSON unread
+
+        tags =
+            List.foldl
+                (\b s -> Set.union s (tagsSetFromBookmark b))
+                Set.empty
+                bookmarks
+    in
+        ( { unread = bookmarks
+          , tags = tags
+          }
+        , Cmd.none
+        )
 
 
 bookmarkFromJSON : BookmarkJSON -> Bookmark
@@ -54,6 +71,11 @@ bookmarkFromJSON bj =
             String.words bj.tags
     , toread = bj.toread == "yes"
     }
+
+
+tagsSetFromBookmark : Bookmark -> Set String
+tagsSetFromBookmark b =
+    List.foldl (\t s -> Set.insert t s) Set.empty b.tags
 
 
 
@@ -96,10 +118,29 @@ viewBookmark bookmark =
                 ]
             ]
         , div [ class "bookmark-separator" ] []
-        , div [ class "bookmark-description" ] [ text bookmark.extended ]
+        , div [ class "bookmark-description" ]
+            [ if String.isEmpty bookmark.extended then
+                info "No description"
+              else
+                text bookmark.extended
+            ]
         , div [ class "bookmark-separator" ] []
-        , div [ class "bookmark-footer" ] <| List.map (\t -> span [] [ text ("[" ++ t ++ "]") ]) bookmark.tags
+        , div [ class "bookmark-footer" ] <|
+            if List.isEmpty bookmark.tags then
+                [ info "No tags" ]
+            else
+                List.map tag bookmark.tags
         ]
+
+
+info : String -> Html Msg
+info txt =
+    span [ class "info" ] [ text txt ]
+
+
+tag : String -> Html Msg
+tag txt =
+    span [ class "tag" ] [ text txt ]
 
 
 main : Program Flags Model Msg

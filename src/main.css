@@ -23,18 +23,35 @@ a {
 .bookmark-header {}
 .bookmark-header-link {
   display: block;
-  padding: 0.5rem 1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .bookmark-separator {
   display: block;
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid rgba(0,0,0,0.05);
   width: 100%;
   height: 0px;
 }
-.bookmark-description, .bookmark.footer {
+.bookmark-header-link, .bookmark-description, .bookmark-footer {
   display: block;
-  min-height: 1rem;
+  padding: 0.5rem 1rem;
+  min-height: 1em;
+}
+.bookmark-description, .bookmark-footer {
+  font-size: 0.8em;
+}
+.bookmark-footer>.tag {
+  margin-right: 1em;
+}
+
+.info {
+  font-style: italic;
+  color: #ddd;
+}
+
+.tag {
+  display: inline-block;
+  background-color: #fff9d2;
+  padding: 0.1em 0.5em;
 }

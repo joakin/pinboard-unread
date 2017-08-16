@@ -10,9 +10,31 @@ import Set exposing (Set)
 
 
 type alias Model =
+    Status
+
+
+type Status
+    = NoAuth LoginData
+    | Auth Data
+
+
+type alias LoginData =
+    { tokenInput : String
+    , status : LoginStatus
+    }
+
+
+type LoginStatus
+    = LoginForm
+    | TryingAuth
+    | AuthError String
+
+
+type alias Data =
     { unread : List Bookmark
     , tags : Set String
     , filter : Filter
+    , token : String
     }
 
 
@@ -42,9 +64,14 @@ type alias Bookmark =
     }
 
 
-type alias Flags =
+type alias DataJSON =
     { unread : List BookmarkJSON
+    , token : String
     }
+
+
+type alias Flags =
+    { data : Maybe DataJSON }
 
 
 untaggedTag : String
@@ -53,23 +80,35 @@ untaggedTag =
 
 
 init : Flags -> ( Model, Cmd Msg )
-init { unread } =
-    let
-        bookmarks =
-            List.map bookmarkFromJSON unread
+init { data } =
+    case data of
+        Just { token, unread } ->
+            let
+                bookmarks =
+                    List.map bookmarkFromJSON unread
 
-        tags =
-            List.foldl
-                (\b s -> Set.union s (tagsSetFromBookmark b))
-                Set.empty
-                bookmarks
-    in
-        ( { unread = bookmarks
-          , tags = tags
-          , filter = Unfiltered
-          }
-        , Cmd.none
-        )
+                tags =
+                    List.foldl
+                        (\b s -> Set.union s (tagsSetFromBookmark b))
+                        Set.empty
+                        bookmarks
+            in
+                ( Auth
+                    { unread = bookmarks
+                    , tags = tags
+                    , filter = Unfiltered
+                    , token = token
+                    }
+                , Cmd.none
+                )
+
+        Nothing ->
+            ( NoAuth
+                { tokenInput = ""
+                , status = LoginForm
+                }
+            , Cmd.none
+            )
 
 
 bookmarkFromJSON : BookmarkJSON -> Bookmark
@@ -107,13 +146,27 @@ filterBookmark filter bookmark =
 
 type Msg
     = TagSelected String
+    | FormTokenInput String
+    | FormTokenSubmit
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        TagSelected t ->
-            ( { model | filter = updateFilter t model.filter }, Cmd.none )
+    case ( msg, model ) of
+        ( FormTokenInput txt, NoAuth loginData ) ->
+            ( NoAuth { loginData | tokenInput = txt }, Cmd.none )
+
+        ( FormTokenSubmit, NoAuth loginData ) ->
+            if String.isEmpty loginData.tokenInput then
+                model ! []
+            else
+                ( NoAuth { loginData | status = TryingAuth }, Cmd.none )
+
+        ( TagSelected t, Auth data ) ->
+            ( Auth { data | filter = updateFilter t data.filter }, Cmd.none )
+
+        ( _, _ ) ->
+            model ! []
 
 
 updateFilter : String -> Filter -> Filter
@@ -143,7 +196,59 @@ updateFilter tag filter =
 
 
 view : Model -> Html Msg
-view { unread, tags, filter } =
+view model =
+    div [ class "app" ]
+        [ case model of
+            NoAuth data ->
+                viewLogin data
+
+            Auth data ->
+                viewBookmarks data
+        ]
+
+
+viewLogin : LoginData -> Html Msg
+viewLogin data =
+    div []
+        [ h1 [] [ text "Login info" ]
+        , p [] [ text "You are not logged in, there is no token stored in this session." ]
+        , p [] [ text "Please set a the auth token up to retrieve and manipulate your bookmarks." ]
+        , p []
+            [ text "You can find your token in your "
+            , a
+                [ href "https://pinboard.in/settings/password"
+                , target "_blank"
+                ]
+                [ text "settings page on pinboard.in" ]
+            , text "."
+            ]
+        , Html.form [ class "token-form", onSubmit FormTokenSubmit ]
+            [ div
+                [ classList
+                    [ ( "token-form-loading", True )
+                    , ( "hidden", data.status /= TryingAuth )
+                    ]
+                ]
+                [ text "Trying to auth..." ]
+            , input
+                [ type_ "text"
+                , placeholder "input your token here!"
+                , class "token-form-input"
+                , onInput FormTokenInput
+                ]
+                []
+            , input
+                [ type_ "submit"
+                , value "Save"
+                , class "token-form-submit"
+                ]
+                []
+            ]
+        ]
+
+
+viewBookmarks : Data -> Html Msg
+viewBookmarks { unread, tags, filter } =
     let
         total =
             List.length unread |> toString
@@ -154,7 +259,7 @@ view { unread, tags, filter } =
         filteredTotal =
             List.length filteredUnread |> toString
     in
-        div [ class "app" ]
+        div []
             [ h1 [] [ text "Unread bookmarks" ]
             , section [ class "unread-tags" ] <| viewTags filter tags
             , section [ class "stats" ] [ text <| filteredTotal ++ " / " ++ total ]

@@ -54,6 +54,15 @@ a {
   display: inline-block;
   background-color: #fff9d2;
   padding: 0.3em 0.6em;
+  border-radius: 3px;
+  color: rgba(0,0,0,0.6);
+  cursor: pointer;
+}
+.tag.selected {
+  background-color: #ceff99;
+  color: rgba(0,0,0,0.8);
+  text-shadow: 0px 1px rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 5px rgba(127, 86, 0, 0.15), inset 0 -1px 1px rgba(255, 255, 255, 0.4);
 }
 
 .unread-tags {

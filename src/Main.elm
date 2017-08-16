@@ -97,11 +97,19 @@ update msg model =
 
 view : Model -> Html Msg
 view { unread, tags } =
-    div [ class "app" ]
-        [ h1 [] [ text "Unread bookmarks" ]
-        , section [ class "unread-tags" ] <| List.map tag <| Set.toList tags
-        , section [] <| List.map viewBookmark unread
-        ]
+    let
+        total =
+            List.length unread
+
+        totalString =
+            toString total
+    in
+        div [ class "app" ]
+            [ h1 [] [ text "Unread bookmarks" ]
+            , section [ class "unread-tags" ] <| List.map tag <| Set.toList tags
+            , section [ class "stats" ] [ text <| totalString ++ " / " ++ totalString ]
+            , section [] <| List.map viewBookmark unread
+            ]
 
 
 viewBookmark : Bookmark -> Html Msg

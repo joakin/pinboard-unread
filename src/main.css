@@ -26,6 +26,7 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 1.1em;
 }
 .bookmark-separator {
   display: block;
@@ -38,11 +39,10 @@ a {
   padding: 0.5rem 1rem;
   min-height: 1em;
 }
-.bookmark-description, .bookmark-footer {
-  font-size: 0.8em;
-}
+.bookmark-description, .bookmark-footer {}
 .bookmark-footer>.tag {
   margin-right: 1em;
+  margin-bottom: 0.5em;
 }
 
 .info {
@@ -57,6 +57,7 @@ a {
   border-radius: 3px;
   color: rgba(0,0,0,0.6);
   cursor: pointer;
+  font-size: 0.7em;
 }
 .tag.selected {
   background-color: #ceff99;
@@ -66,7 +67,6 @@ a {
 }
 
 .unread-tags {
-  font-size: 0.7em;
   margin-bottom: 1rem;
 }
 .unread-tags>.tag {

@@ -1,6 +1,6 @@
 body {
   font-family: sans-serif;
-  font-size: 1em;
+  font-size: 18px;
   margin: 0;
   color: #293c4b;
 }
@@ -17,7 +17,7 @@ a {
 }
 
 .bookmark {
-  box-shadow: 0 2px 1px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   margin-bottom: 1em;
 }
 .bookmark-header {}

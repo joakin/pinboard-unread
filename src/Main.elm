@@ -4,6 +4,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Set exposing (Set)
+import Net
+import Http
 
 
 ---- MODEL ----
@@ -27,7 +29,7 @@ type alias LoginData =
 type LoginStatus
     = LoginForm
     | TryingAuth
-    | AuthError String
+    | AuthError Http.Error
 
 
 type alias Data =
@@ -148,6 +150,7 @@ type Msg
     = TagSelected String
     | FormTokenInput String
     | FormTokenSubmit
+    | LastUpdateTime (Result Http.Error Net.UpdateTimeJSON)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -160,7 +163,22 @@ update msg model =
             if String.isEmpty loginData.tokenInput then
                 model ! []
             else
-                ( NoAuth { loginData | status = TryingAuth }, Cmd.none )
+                ( NoAuth { loginData | status = TryingAuth }
+                , Http.send LastUpdateTime <| Net.postsUpdate loginData.tokenInput
+                )
+
+        -- Tried token on auth and it worked fine
+        ( LastUpdateTime (Ok { updateTime }), NoAuth loginData ) ->
+            init
+                { data =
+                    Just
+                        { token = loginData.tokenInput
+                        , unread = []
+                        }
+                }
+
+        ( LastUpdateTime (Err err), NoAuth loginData ) ->
+            NoAuth { loginData | status = AuthError err } ! []
 
         ( TagSelected t, Auth data ) ->
             ( Auth { data | filter = updateFilter t data.filter }, Cmd.none )
@@ -209,42 +227,99 @@ view model =
 
 viewLogin : LoginData -> Html Msg
 viewLogin data =
-    div []
-        [ h1 [] [ text "Login info" ]
-        , p [] [ text "You are not logged in, there is no token stored in this session." ]
-        , p [] [ text "Please set a the auth token up to retrieve and manipulate your bookmarks." ]
-        , p []
-            [ text "You can find your token in your "
-            , a
-                [ href "https://pinboard.in/settings/password"
-                , target "_blank"
-                ]
-                [ text "settings page on pinboard.in" ]
-            , text "."
-            ]
-        , Html.form [ class "token-form", onSubmit FormTokenSubmit ]
-            [ div
-                [ classList
-                    [ ( "token-form-loading", True )
-                    , ( "hidden", data.status /= TryingAuth )
+    let
+        showLoading =
+            data.status == TryingAuth
+
+        ( hasError, error ) =
+            case data.status of
+                AuthError err ->
+                    let
+                        msg =
+                            case err of
+                                Http.BadUrl str ->
+                                    "URL invalid"
+
+                                Http.Timeout ->
+                                    "Request timed out. Try again later"
+
+                                Http.NetworkError ->
+                                    "Network error. There was a problem with the request"
+
+                                Http.BadStatus res ->
+                                    "Request failed with code "
+                                        ++ toString res.status.code
+                                        ++ ", "
+                                        ++ res.status.message
+                                        ++ ". "
+                                        ++ res.body
+
+                                Http.BadPayload err res ->
+                                    "Error decoding the response. "
+                                        ++ err
+                    in
+                        ( True, msg )
+
+                _ ->
+                    ( False, "" )
+    in
+        div []
+            [ h1 [] [ text "Login info" ]
+            , p [] [ text "You are not logged in, there is no token stored in this session." ]
+            , p [] [ text "Please set a the auth token up to retrieve and manipulate your bookmarks." ]
+            , p []
+                [ text "You can find your token in your "
+                , a
+                    [ href "https://pinboard.in/settings/password"
+                    , target "_blank"
                     ]
+                    [ text "settings page on pinboard.in" ]
+                , text "."
                 ]
-                [ text "Trying to auth..." ]
-            , input
-                [ type_ "text"
-                , placeholder "input your token here!"
-                , class "token-form-input"
-                , onInput FormTokenInput
+            , Html.form [ class "token-form", onSubmit FormTokenSubmit ]
+                [ div
+                    [ classList
+                        [ ( "token-form-loading", True )
+                        , ( "hidden", not showLoading )
+                        ]
+                    ]
+                    [ span
+                        (if showLoading then
+                            [ class <|
+                                String.join " "
+                                    [ "animated"
+                                    , "infinite"
+                                    , "pulse"
+                                    ]
+                            ]
+                         else
+                            []
+                        )
+                        [ text "Trying to auth..." ]
+                    ]
+                , div
+                    [ classList
+                        [ ( "token-form-error", True )
+                        , ( "hidden", not hasError )
+                        ]
+                    ]
+                    [ text error ]
+                , input
+                    [ type_ "text"
+                    , placeholder "input your token here!"
+                    , class "token-form-input"
+                    , classList [ ( "error", hasError ) ]
+                    , onInput FormTokenInput
+                    ]
+                    []
+                , input
+                    [ type_ "submit"
+                    , value "Save"
+                    , class "token-form-submit"
+                    ]
+                    []
                 ]
-                []
-            , input
-                [ type_ "submit"
-                , value "Save"
-                , class "token-form-submit"
-                ]
-                []
             ]
-        ]
 
 
 viewBookmarks : Data -> Html Msg

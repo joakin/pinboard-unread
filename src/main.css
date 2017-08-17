@@ -119,3 +119,12 @@ a {
   justify-content: center;
   align-items: center;
 }
+.token-form-error {
+  width: 70%;
+  margin: auto;
+  padding: 0.6em;
+  background-color: #fff1bc;
+  border-radius: 3px;
+  font-size: 0.8em;
+  color: rgba(0,0,0,0.6);
+}

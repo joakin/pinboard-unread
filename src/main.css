@@ -24,6 +24,7 @@ input[type=submit], button {
 a {
   color: #0077c7;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .hidden { display: none !important; }
@@ -127,4 +128,19 @@ a {
   border-radius: 3px;
   font-size: 0.8em;
   color: rgba(0,0,0,0.6);
+}
+
+.menu-bar {
+  margin-bottom: 1em;
+  font-size: 0.7em;
+  text-align: right;
+}
+.menu-bar>* {
+  margin-left: 1em;
+}
+
+.unread-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
 }

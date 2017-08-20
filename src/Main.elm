@@ -40,6 +40,7 @@ type alias Data =
     , tags : Tags
     , filter : Filter
     , token : String
+    , user : String
     , lastUpdateTime : String
     }
 
@@ -105,6 +106,11 @@ dataWithTokenAndLastUpdate token lastUpdateTime =
     , tags = Tags.empty
     , filter = Unfiltered
     , token = token
+    , user =
+        token
+            |> String.split ":"
+            |> List.head
+            |> Maybe.withDefault "Unknown user"
     , lastUpdateTime = lastUpdateTime
     }
 
@@ -118,6 +124,7 @@ type Msg
     | FormTokenInput String
     | FormTokenSubmit
     | FormTokenResponse (Result Http.Error Net.UpdateTimeJSON)
+    | LogOut
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -286,7 +293,7 @@ viewLogin data =
 
 
 viewBookmarks : Data -> Html Msg
-viewBookmarks { unread, tags, filter } =
+viewBookmarks { unread, tags, filter, user } =
     let
         unreadBookmarks =
             Maybe.withDefault [] unread
@@ -300,12 +307,25 @@ viewBookmarks { unread, tags, filter } =
         filteredTotal =
             List.length filteredUnread |> toString
     in
-        div []
-            [ h1 [] [ text "Unread bookmarks" ]
-            , section [ class "unread-tags" ] <| viewTags filter tags
-            , section [ class "stats" ] [ text <| filteredTotal ++ " / " ++ total ]
-            , section [] <| List.map (viewBookmark filter) filteredUnread
+        div [] <|
+            [ header [ class "unread-page-header" ]
+                [ h2 [] [ text "Unread bookmarks" ]
+                , section [ class "menu-bar" ]
+                    [ span [] [ text <| "User: " ++ user ]
+                    , a [ onClick LogOut ] [ text "Log out" ]
+                    ]
+                ]
             ]
+                ++ (case unread of
+                        Just unreadBookmarks ->
+                            [ section [ class "unread-tags" ] <| viewTags filter tags
+                            , section [ class "stats" ] [ text <| filteredTotal ++ " / " ++ total ]
+                            , section [] <| List.map (viewBookmark filter) filteredUnread
+                            ]
+
+                        Nothing ->
+                            [ info "No bookmarks fetched yet." ]
+                   )
 
 
 viewTags : Filter -> Tags -> List (Html Msg)

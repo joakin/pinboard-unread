@@ -9,12 +9,8 @@ const app = Main.embed(document.getElementById("root"), {
   data: getData()
 });
 
-app.ports.saveToken.subscribe(token => {
-  updateData({ token });
-});
-
-app.ports.saveLastUpdateTime.subscribe(lastUpdateTime => {
-  updateData({ lastUpdateTime });
+app.ports.save.subscribe(([token, lastUpdateTime, unread]) => {
+  updateData({ token, lastUpdateTime, unread });
 });
 
 app.ports.logOut.subscribe(_ => {

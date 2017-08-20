@@ -1,7 +1,9 @@
 port module Ports exposing (..)
 
+import Bookmarks exposing (BookmarkJSON)
 
-port saveToken : String -> Cmd msg
+
+port save : ( String, String, List BookmarkJSON ) -> Cmd msg
 
 
 port saveLastUpdateTime : String -> Cmd msg

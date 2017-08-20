@@ -6,9 +6,10 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Net
 import Http
+import Task exposing (Task)
 import Bookmarks exposing (Bookmark, BookmarkJSON, Filter(..))
 import Tags exposing (Tags)
-import Ports exposing (saveToken, saveLastUpdateTime, logOut)
+import Ports exposing (save, logOut)
 
 
 ---- MODEL ----
@@ -32,7 +33,12 @@ type alias LoginData =
 type LoginStatus
     = LoginForm
     | TryingAuth
-    | AuthError Http.Error
+    | AuthError Error
+
+
+type Error
+    = StringError String
+    | HttpError Http.Error
 
 
 type alias Data =
@@ -82,22 +88,28 @@ initWithJSON { token, unread, lastUpdateTime } =
     in
         case unread of
             Just unreadBookmarks ->
-                let
-                    bookmarks =
-                        List.map Bookmarks.fromJSON unreadBookmarks
-
-                    tags =
-                        Bookmarks.tagsFrom bookmarks
-                in
-                    Auth
-                        { data
-                            | unread = Just bookmarks
-                            , tags = tags
-                        }
-                        ! []
+                Auth (dataWithBookmarksJSON unreadBookmarks data)
+                    ! []
 
             Nothing ->
-                Auth data ! []
+                Auth data
+                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks data.token data.lastUpdateTime
+                      ]
+
+
+dataWithBookmarksJSON : List BookmarkJSON -> Data -> Data
+dataWithBookmarksJSON unreadBookmarks data =
+    let
+        bookmarks =
+            List.map Bookmarks.fromJSON unreadBookmarks
+
+        tags =
+            Bookmarks.tagsFrom bookmarks
+    in
+        { data
+            | unread = Just bookmarks
+            , tags = tags
+        }
 
 
 dataWithTokenAndLastUpdate : String -> String -> Data
@@ -123,8 +135,9 @@ type Msg
     = TagSelected String
     | FormTokenInput String
     | FormTokenSubmit
-    | FormTokenResponse (Result Http.Error Net.UpdateTimeJSON)
+    | FormTokenResponse (Result Error ( String, List BookmarkJSON ))
     | LogOut
+    | UnreadBookmarksResponse (Result Error ( String, List BookmarkJSON ))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -138,20 +151,36 @@ update msg model =
                 model ! []
             else
                 NoAuth { loginData | status = TryingAuth }
-                    ! [ Http.send FormTokenResponse <| Net.lastUpdateTime loginData.tokenInput ]
+                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks loginData.tokenInput "" ]
 
-        ( FormTokenResponse (Ok { updateTime }), NoAuth loginData ) ->
+        ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), NoAuth loginData ) ->
             -- Tried token on auth and it worked fine
-            Auth (dataWithTokenAndLastUpdate loginData.tokenInput updateTime)
-                ! [ saveToken loginData.tokenInput
-                  , saveLastUpdateTime updateTime
-                  ]
+            let
+                ( mdl, cmds ) =
+                    initWithJSON
+                        { token = loginData.tokenInput
+                        , lastUpdateTime = updateTime
+                        , unread = Just bookmarks
+                        }
+            in
+                mdl ! [ cmds, save ( loginData.tokenInput, updateTime, bookmarks ) ]
 
-        ( FormTokenResponse (Err err), NoAuth loginData ) ->
+        ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), Auth data ) ->
+            Auth
+                (dataWithBookmarksJSON bookmarks
+                    { data
+                        | lastUpdateTime = updateTime
+                    }
+                )
+                ! [ save ( data.token, updateTime, bookmarks ) ]
+
+        ( UnreadBookmarksResponse (Err err), NoAuth loginData ) ->
             NoAuth { loginData | status = AuthError err } ! []
 
-        -- Authenticated:
-        --
+        ( UnreadBookmarksResponse (Err err), Auth data ) ->
+            -- TODO: Handle failure when getting bookmarks fails
+            model ! []
+
         ( TagSelected t, Auth data ) ->
             Auth { data | filter = updateFilter t data.filter } ! []
 
@@ -160,6 +189,22 @@ update msg model =
 
         ( _, _ ) ->
             model ! []
+
+
+fetchUnreadBookmarks : String -> String -> Task Error ( String, List BookmarkJSON )
+fetchUnreadBookmarks token lastUpdateTime =
+    Http.toTask (Net.lastUpdateTime token)
+        |> Task.mapError HttpError
+        |> Task.andThen
+            (\{ updateTime } ->
+                if updateTime /= lastUpdateTime then
+                    Net.unreadBookmarks token
+                        |> Http.toTask
+                        |> Task.mapError HttpError
+                        |> Task.map (\bms -> ( updateTime, bms ))
+                else
+                    Task.fail (StringError "Update time is the same.")
+            )
 
 
 updateFilter : String -> Filter -> Filter
@@ -212,16 +257,19 @@ viewLogin data =
                     let
                         msg =
                             case err of
-                                Http.BadUrl str ->
+                                StringError str ->
+                                    str
+
+                                HttpError (Http.BadUrl str) ->
                                     "URL invalid"
 
-                                Http.Timeout ->
+                                HttpError Http.Timeout ->
                                     "Request timed out. Try again later"
 
-                                Http.NetworkError ->
+                                HttpError Http.NetworkError ->
                                     "Network error. There was a problem with the request"
 
-                                Http.BadStatus res ->
+                                HttpError (Http.BadStatus res) ->
                                     "Request failed with code "
                                         ++ toString res.status.code
                                         ++ ", "
@@ -229,7 +277,7 @@ viewLogin data =
                                         ++ ". "
                                         ++ res.body
 
-                                Http.BadPayload err res ->
+                                HttpError (Http.BadPayload err res) ->
                                     "Error decoding the response. "
                                         ++ err
                     in

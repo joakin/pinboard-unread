@@ -1,5 +1,6 @@
 module Bookmarks exposing (..)
 
+import Json.Decode as D
 import Tags exposing (Tags)
 
 
@@ -27,6 +28,24 @@ type alias BookmarkJSON =
 type Filter
     = Unfiltered
     | Tags Tags
+
+
+decodeBookmarkJSONList : D.Decoder (List BookmarkJSON)
+decodeBookmarkJSONList =
+    D.list decodeBookmarkJSON
+
+
+decodeBookmarkJSON : D.Decoder BookmarkJSON
+decodeBookmarkJSON =
+    D.map8 BookmarkJSON
+        (D.field "description" (D.string))
+        (D.field "extended" (D.string))
+        (D.field "hash" (D.string))
+        (D.field "href" (D.string))
+        (D.field "shared" (D.string))
+        (D.field "tags" (D.string))
+        (D.field "time" (D.string))
+        (D.field "toread" (D.string))
 
 
 fromJSON : BookmarkJSON -> Bookmark

@@ -9,6 +9,7 @@ module Net
 import Json.Decode as D exposing (Decoder)
 import Http exposing (stringBody)
 import Util exposing ((=>))
+import Bookmarks exposing (BookmarkJSON, decodeBookmarkJSONList)
 
 
 type alias UpdateTimeJSON =
@@ -27,9 +28,9 @@ lastUpdateTime token =
     get "posts/update" token [] decodeUpdateTime
 
 
-unreadBookmarks : String -> Http.Request UpdateTimeJSON
+unreadBookmarks : String -> Http.Request (List BookmarkJSON)
 unreadBookmarks token =
-    get "posts/all" token [ "toread" => "yes" ] decodeUpdateTime
+    get "posts/all" token [ "toread" => "yes" ] decodeBookmarkJSONList
 
 
 

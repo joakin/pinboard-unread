@@ -236,7 +236,10 @@ updateFilter tag filter =
 view : Model -> Html Msg
 view model =
     div [ class "app" ]
-        [ case model of
+        [ header []
+            [ h1 [] [ text "Pinboard unread 📌" ]
+            ]
+        , case model of
             NoAuth data ->
                 viewLogin data
 

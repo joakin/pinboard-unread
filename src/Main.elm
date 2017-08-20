@@ -116,7 +116,7 @@ type Msg
     = TagSelected String
     | FormTokenInput String
     | FormTokenSubmit
-    | LastUpdateTime (Result Http.Error Net.UpdateTimeJSON)
+    | FormTokenResponse (Result Http.Error Net.UpdateTimeJSON)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -130,14 +130,14 @@ update msg model =
                 model ! []
             else
                 NoAuth { loginData | status = TryingAuth }
-                    ! [ Http.send LastUpdateTime <| Net.postsUpdate loginData.tokenInput ]
+                    ! [ Http.send FormTokenResponse <| Net.postsUpdate loginData.tokenInput ]
 
         -- Tried token on auth and it worked fine
-        ( LastUpdateTime (Ok { updateTime }), NoAuth loginData ) ->
+        ( FormTokenResponse (Ok { updateTime }), NoAuth loginData ) ->
             Auth (dataWithTokenAndLastUpdate loginData.tokenInput updateTime)
                 ! []
 
-        ( LastUpdateTime (Err err), NoAuth loginData ) ->
+        ( FormTokenResponse (Err err), NoAuth loginData ) ->
             NoAuth { loginData | status = AuthError err } ! []
 
         ( TagSelected t, Auth data ) ->

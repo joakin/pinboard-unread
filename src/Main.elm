@@ -33,10 +33,11 @@ type LoginStatus
 
 
 type alias Data =
-    { unread : List Bookmark
+    { unread : Maybe (List Bookmark)
     , tags : Set String
     , filter : Filter
     , token : String
+    , lastUpdateTime : String
     }
 
 
@@ -67,8 +68,9 @@ type alias Bookmark =
 
 
 type alias DataJSON =
-    { unread : List BookmarkJSON
+    { unread : Maybe (List BookmarkJSON)
     , token : String
+    , lastUpdateTime : String
     }
 
 
@@ -84,33 +86,58 @@ untaggedTag =
 init : Flags -> ( Model, Cmd Msg )
 init { data } =
     case data of
-        Just { token, unread } ->
-            let
-                bookmarks =
-                    List.map bookmarkFromJSON unread
-
-                tags =
-                    List.foldl
-                        (\b s -> Set.union s (tagsSetFromBookmark b))
-                        Set.empty
-                        bookmarks
-            in
-                ( Auth
-                    { unread = bookmarks
-                    , tags = tags
-                    , filter = Unfiltered
-                    , token = token
-                    }
-                , Cmd.none
-                )
+        Just d ->
+            initWithJSON d
 
         Nothing ->
-            ( NoAuth
-                { tokenInput = ""
-                , status = LoginForm
-                }
-            , Cmd.none
-            )
+            initEmpty ! []
+
+
+initEmpty : Model
+initEmpty =
+    NoAuth
+        { tokenInput = ""
+        , status = LoginForm
+        }
+
+
+initWithJSON : DataJSON -> ( Model, Cmd Msg )
+initWithJSON { token, unread, lastUpdateTime } =
+    let
+        data =
+            dataWithTokenAndLastUpdate token lastUpdateTime
+    in
+        case unread of
+            Just unreadBookmarks ->
+                let
+                    bookmarks =
+                        List.map bookmarkFromJSON unreadBookmarks
+
+                    tags =
+                        List.foldl
+                            (\b s -> Set.union s (tagsSetFromBookmark b))
+                            Set.empty
+                            bookmarks
+                in
+                    Auth
+                        { data
+                            | unread = Just bookmarks
+                            , tags = tags
+                        }
+                        ! []
+
+            Nothing ->
+                Auth data ! []
+
+
+dataWithTokenAndLastUpdate : String -> String -> Data
+dataWithTokenAndLastUpdate token lastUpdateTime =
+    { unread = Nothing
+    , tags = Set.empty
+    , filter = Unfiltered
+    , token = token
+    , lastUpdateTime = lastUpdateTime
+    }
 
 
 bookmarkFromJSON : BookmarkJSON -> Bookmark
@@ -169,13 +196,8 @@ update msg model =
 
         -- Tried token on auth and it worked fine
         ( LastUpdateTime (Ok { updateTime }), NoAuth loginData ) ->
-            init
-                { data =
-                    Just
-                        { token = loginData.tokenInput
-                        , unread = []
-                        }
-                }
+            Auth (dataWithTokenAndLastUpdate loginData.tokenInput updateTime)
+                ! []
 
         ( LastUpdateTime (Err err), NoAuth loginData ) ->
             NoAuth { loginData | status = AuthError err } ! []
@@ -325,11 +347,14 @@ viewLogin data =
 viewBookmarks : Data -> Html Msg
 viewBookmarks { unread, tags, filter } =
     let
+        unreadBookmarks =
+            Maybe.withDefault [] unread
+
         total =
-            List.length unread |> toString
+            List.length unreadBookmarks |> toString
 
         filteredUnread =
-            List.filter (filterBookmark filter) unread
+            List.filter (filterBookmark filter) unreadBookmarks
 
         filteredTotal =
             List.length filteredUnread |> toString
@@ -422,3 +447,18 @@ main =
         , update = update
         , subscriptions = always Sub.none
         }
+
+
+
+-- Utils
+
+
+(=>) : a -> b -> ( a, b )
+(=>) =
+    (,)
+
+
+{-| infixl 0 means the (=>) operator has the same precedence as (<|) and (|>),
+meaning you can use it at the end of a pipeline and have the precedence work out.
+-}
+infixl 0 =>

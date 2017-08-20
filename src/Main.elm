@@ -135,9 +135,8 @@ type Msg
     = TagSelected String
     | FormTokenInput String
     | FormTokenSubmit
-    | FormTokenResponse (Result Error ( String, List BookmarkJSON ))
-    | LogOut
     | UnreadBookmarksResponse (Result Error ( String, List BookmarkJSON ))
+    | LogOut
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

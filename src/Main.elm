@@ -1,11 +1,13 @@
 module Main exposing (..)
 
+import Util exposing ((=>))
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Set exposing (Set)
 import Net
 import Http
+import Bookmarks exposing (Bookmark, BookmarkJSON, Filter(..))
+import Tags exposing (Tags)
 
 
 ---- MODEL ----
@@ -34,36 +36,10 @@ type LoginStatus
 
 type alias Data =
     { unread : Maybe (List Bookmark)
-    , tags : Set String
+    , tags : Tags
     , filter : Filter
     , token : String
     , lastUpdateTime : String
-    }
-
-
-type Filter
-    = Unfiltered
-    | Tags (Set String)
-
-
-type alias BookmarkJSON =
-    { description : String
-    , extended : String
-    , hash : String
-    , href : String
-    , shared : String
-    , tags : String
-    , time : String
-    , toread : String
-    }
-
-
-type alias Bookmark =
-    { description : String
-    , extended : String
-    , href : String
-    , tags : List String
-    , toread : Bool
     }
 
 
@@ -76,11 +52,6 @@ type alias DataJSON =
 
 type alias Flags =
     { data : Maybe DataJSON }
-
-
-untaggedTag : String
-untaggedTag =
-    "[no tags]"
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -111,13 +82,10 @@ initWithJSON { token, unread, lastUpdateTime } =
             Just unreadBookmarks ->
                 let
                     bookmarks =
-                        List.map bookmarkFromJSON unreadBookmarks
+                        List.map Bookmarks.fromJSON unreadBookmarks
 
                     tags =
-                        List.foldl
-                            (\b s -> Set.union s (tagsSetFromBookmark b))
-                            Set.empty
-                            bookmarks
+                        Bookmarks.tagsFrom bookmarks
                 in
                     Auth
                         { data
@@ -133,40 +101,11 @@ initWithJSON { token, unread, lastUpdateTime } =
 dataWithTokenAndLastUpdate : String -> String -> Data
 dataWithTokenAndLastUpdate token lastUpdateTime =
     { unread = Nothing
-    , tags = Set.empty
+    , tags = Tags.empty
     , filter = Unfiltered
     , token = token
     , lastUpdateTime = lastUpdateTime
     }
-
-
-bookmarkFromJSON : BookmarkJSON -> Bookmark
-bookmarkFromJSON bj =
-    { description = bj.description
-    , extended = bj.extended
-    , href = bj.href
-    , tags =
-        if String.isEmpty bj.tags then
-            [ untaggedTag ]
-        else
-            String.words bj.tags
-    , toread = bj.toread == "yes"
-    }
-
-
-tagsSetFromBookmark : Bookmark -> Set String
-tagsSetFromBookmark b =
-    List.foldl (\t s -> Set.insert t s) Set.empty b.tags
-
-
-filterBookmark : Filter -> Bookmark -> Bool
-filterBookmark filter bookmark =
-    case filter of
-        Unfiltered ->
-            True
-
-        Tags tags ->
-            List.any (\t -> Set.member t tags) bookmark.tags
 
 
 
@@ -184,15 +123,14 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         ( FormTokenInput txt, NoAuth loginData ) ->
-            ( NoAuth { loginData | tokenInput = txt }, Cmd.none )
+            NoAuth { loginData | tokenInput = txt } ! []
 
         ( FormTokenSubmit, NoAuth loginData ) ->
             if String.isEmpty loginData.tokenInput then
                 model ! []
             else
-                ( NoAuth { loginData | status = TryingAuth }
-                , Http.send LastUpdateTime <| Net.postsUpdate loginData.tokenInput
-                )
+                NoAuth { loginData | status = TryingAuth }
+                    ! [ Http.send LastUpdateTime <| Net.postsUpdate loginData.tokenInput ]
 
         -- Tried token on auth and it worked fine
         ( LastUpdateTime (Ok { updateTime }), NoAuth loginData ) ->
@@ -203,7 +141,7 @@ update msg model =
             NoAuth { loginData | status = AuthError err } ! []
 
         ( TagSelected t, Auth data ) ->
-            ( Auth { data | filter = updateFilter t data.filter }, Cmd.none )
+            Auth { data | filter = updateFilter t data.filter } ! []
 
         ( _, _ ) ->
             model ! []
@@ -213,22 +151,22 @@ updateFilter : String -> Filter -> Filter
 updateFilter tag filter =
     case filter of
         Unfiltered ->
-            Tags (Set.insert tag Set.empty)
+            Tags (Tags.add tag Tags.empty)
 
         Tags tags ->
-            case Set.member tag tags of
+            case Tags.isMember tag tags of
                 True ->
                     let
                         newTags =
-                            Set.remove tag tags
+                            Tags.remove tag tags
                     in
-                        if Set.isEmpty newTags then
+                        if Tags.isEmpty newTags then
                             Unfiltered
                         else
                             Tags newTags
 
                 False ->
-                    Tags (Set.insert tag tags)
+                    Tags (Tags.add tag tags)
 
 
 
@@ -301,8 +239,8 @@ viewLogin data =
             , Html.form [ class "token-form", onSubmit FormTokenSubmit ]
                 [ div
                     [ classList
-                        [ ( "token-form-loading", True )
-                        , ( "hidden", not showLoading )
+                        [ "token-form-loading" => True
+                        , "hidden" => not showLoading
                         ]
                     ]
                     [ span
@@ -321,8 +259,8 @@ viewLogin data =
                     ]
                 , div
                     [ classList
-                        [ ( "token-form-error", True )
-                        , ( "hidden", not hasError )
+                        [ "token-form-error" => True
+                        , "hidden" => not hasError
                         ]
                     ]
                     [ text error ]
@@ -330,7 +268,7 @@ viewLogin data =
                     [ type_ "text"
                     , placeholder "input your token here!"
                     , class "token-form-input"
-                    , classList [ ( "error", hasError ) ]
+                    , classList [ "error" => hasError ]
                     , onInput FormTokenInput
                     ]
                     []
@@ -354,7 +292,7 @@ viewBookmarks { unread, tags, filter } =
             List.length unreadBookmarks |> toString
 
         filteredUnread =
-            List.filter (filterBookmark filter) unreadBookmarks
+            List.filter (Bookmarks.filter filter) unreadBookmarks
 
         filteredTotal =
             List.length filteredUnread |> toString
@@ -367,11 +305,11 @@ viewBookmarks { unread, tags, filter } =
             ]
 
 
-viewTags : Filter -> Set String -> List (Html Msg)
+viewTags : Filter -> Tags -> List (Html Msg)
 viewTags filter tags =
     let
         tagsList =
-            Set.toList tags
+            Tags.toList tags
     in
         List.map (viewTag filter) tagsList
 
@@ -383,7 +321,7 @@ viewTag filter t =
             tag { selected = False, onClick = TagSelected } t
 
         Tags tags ->
-            if Set.member t tags then
+            if Tags.isMember t tags then
                 tag { selected = True, onClick = TagSelected } t
             else
                 tag { selected = False, onClick = TagSelected } t
@@ -412,7 +350,7 @@ viewBookmark filter bookmark =
             ]
         , div [ class "bookmark-separator" ] []
         , div [ class "bookmark-footer" ] <|
-            if (Maybe.withDefault untaggedTag <| List.head bookmark.tags) == untaggedTag then
+            if (Maybe.withDefault Tags.untagged <| List.head bookmark.tags) == Tags.untagged then
                 [ info "No tags" ]
             else
                 List.map (viewTag filter) bookmark.tags
@@ -433,7 +371,7 @@ type alias TagOptions =
 tag : TagOptions -> String -> Html Msg
 tag options txt =
     span
-        [ classList [ ( "tag", True ), ( "selected", options.selected ) ]
+        [ classList [ "tag" => True, "selected" => options.selected ]
         , onClick (options.onClick txt)
         ]
         [ text txt ]
@@ -447,18 +385,3 @@ main =
         , update = update
         , subscriptions = always Sub.none
         }
-
-
-
--- Utils
-
-
-(=>) : a -> b -> ( a, b )
-(=>) =
-    (,)
-
-
-{-| infixl 0 means the (=>) operator has the same precedence as (<|) and (|>),
-meaning you can use it at the end of a pipeline and have the precedence work out.
--}
-infixl 0 =>

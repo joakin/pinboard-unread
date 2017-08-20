@@ -1,7 +1,7 @@
 import "./animate.css";
 import "./main.css";
 import { Main } from "./Main.elm";
-import { getData, updateData } from "./storage";
+import { getData, updateData, removeData } from "./storage";
 
 import unread from "./unread.json";
 
@@ -15,4 +15,8 @@ app.ports.saveToken.subscribe(token => {
 
 app.ports.saveLastUpdateTime.subscribe(lastUpdateTime => {
   updateData({ lastUpdateTime });
+});
+
+app.ports.logOut.subscribe(_ => {
+  removeData();
 });

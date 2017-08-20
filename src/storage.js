@@ -21,3 +21,7 @@ export function setData(data) {
 export function updateData(data) {
   setData(Object.assign(getData() || defaultData(), data));
 }
+
+export function removeData() {
+  localStorage.removeItem(key());
+}

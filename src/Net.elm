@@ -2,11 +2,13 @@ module Net
     exposing
         ( UpdateTimeJSON
         , decodeUpdateTime
-        , postsUpdate
+        , lastUpdateTime
+        , unreadBookmarks
         )
 
 import Json.Decode as D exposing (Decoder)
 import Http exposing (stringBody)
+import Util exposing ((=>))
 
 
 type alias UpdateTimeJSON =
@@ -20,9 +22,14 @@ decodeUpdateTime =
         (D.field "update_time" D.string)
 
 
-postsUpdate : String -> Http.Request UpdateTimeJSON
-postsUpdate token =
+lastUpdateTime : String -> Http.Request UpdateTimeJSON
+lastUpdateTime token =
     get "posts/update" token [] decodeUpdateTime
+
+
+unreadBookmarks : String -> Http.Request UpdateTimeJSON
+unreadBookmarks token =
+    get "posts/all" token [ "toread" => "yes" ] decodeUpdateTime
 
 
 
@@ -43,9 +50,10 @@ get : String -> String -> List ( String, String ) -> Decoder a -> Http.Request a
 get path token params decoder =
     let
         allParams =
-            ( "auth_token", token )
-                :: ( "format", "json" )
-                :: params
+            [ "auth_token" => token
+            , "format" => "json"
+            ]
+                ++ params
 
         uri =
             url (apiUrl ++ "/" ++ path) allParams

@@ -8,7 +8,7 @@ import Net
 import Http
 import Bookmarks exposing (Bookmark, BookmarkJSON, Filter(..))
 import Tags exposing (Tags)
-import Ports exposing (saveToken, saveLastUpdateTime)
+import Ports exposing (saveToken, saveLastUpdateTime, logOut)
 
 
 ---- MODEL ----
@@ -138,7 +138,7 @@ update msg model =
                 model ! []
             else
                 NoAuth { loginData | status = TryingAuth }
-                    ! [ Http.send FormTokenResponse <| Net.postsUpdate loginData.tokenInput ]
+                    ! [ Http.send FormTokenResponse <| Net.lastUpdateTime loginData.tokenInput ]
 
         ( FormTokenResponse (Ok { updateTime }), NoAuth loginData ) ->
             -- Tried token on auth and it worked fine
@@ -150,8 +150,13 @@ update msg model =
         ( FormTokenResponse (Err err), NoAuth loginData ) ->
             NoAuth { loginData | status = AuthError err } ! []
 
+        -- Authenticated:
+        --
         ( TagSelected t, Auth data ) ->
             Auth { data | filter = updateFilter t data.filter } ! []
+
+        ( LogOut, Auth data ) ->
+            initEmpty ! [ logOut () ]
 
         ( _, _ ) ->
             model ! []

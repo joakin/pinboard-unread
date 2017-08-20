@@ -239,7 +239,7 @@ viewLogin data =
                     ( False, "" )
     in
         div []
-            [ h1 [] [ text "Login info" ]
+            [ h2 [] [ text "Login info" ]
             , p [] [ text "You are not logged in, there is no token stored in this session." ]
             , p [] [ text "Please set a the auth token up to retrieve and manipulate your bookmarks." ]
             , p []

@@ -3,8 +3,6 @@ import "./main.css";
 import { Main } from "./Main.elm";
 import { getData, updateData, removeData } from "./storage";
 
-import unread from "./unread.json";
-
 const app = Main.embed(document.getElementById("root"), {
   data: getData()
 });

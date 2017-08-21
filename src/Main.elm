@@ -24,8 +24,12 @@ type Status
     | Auth Data
 
 
+type alias Token =
+    { value : String }
+
+
 type alias LoginData =
-    { tokenInput : String
+    { tokenInput : Token
     , status : LoginStatus
     }
 
@@ -45,7 +49,7 @@ type alias Data =
     { unread : Maybe (List Bookmark)
     , tags : Tags
     , filter : Filter
-    , token : String
+    , token : Token
     , user : String
     , lastUpdateTime : String
     }
@@ -75,7 +79,7 @@ init { data } =
 initEmpty : Model
 initEmpty =
     NoAuth
-        { tokenInput = ""
+        { tokenInput = { value = "" }
         , status = LoginForm
         }
 
@@ -93,7 +97,7 @@ initWithJSON { token, unread, lastUpdateTime } =
 
             Nothing ->
                 Auth data
-                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks data.token data.lastUpdateTime
+                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks data.token.value data.lastUpdateTime
                       ]
 
 
@@ -117,7 +121,7 @@ dataWithTokenAndLastUpdate token lastUpdateTime =
     { unread = Nothing
     , tags = Tags.empty
     , filter = Unfiltered
-    , token = token
+    , token = { value = token }
     , user =
         token
             |> String.split ":"
@@ -143,26 +147,26 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         ( FormTokenInput txt, NoAuth loginData ) ->
-            NoAuth { loginData | tokenInput = txt } ! []
+            NoAuth { loginData | tokenInput = { value = txt } } ! []
 
         ( FormTokenSubmit, NoAuth loginData ) ->
-            if String.isEmpty loginData.tokenInput then
+            if String.isEmpty loginData.tokenInput.value then
                 model ! []
             else
                 NoAuth { loginData | status = TryingAuth }
-                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks loginData.tokenInput "" ]
+                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks loginData.tokenInput.value "" ]
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), NoAuth loginData ) ->
             -- Tried token on auth and it worked fine
             let
                 ( mdl, cmds ) =
                     initWithJSON
-                        { token = loginData.tokenInput
+                        { token = loginData.tokenInput.value
                         , lastUpdateTime = updateTime
                         , unread = Just bookmarks
                         }
             in
-                mdl ! [ cmds, save ( loginData.tokenInput, updateTime, bookmarks ) ]
+                mdl ! [ cmds, save ( loginData.tokenInput.value, updateTime, bookmarks ) ]
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), Auth data ) ->
             Auth
@@ -171,7 +175,7 @@ update msg model =
                         | lastUpdateTime = updateTime
                     }
                 )
-                ! [ save ( data.token, updateTime, bookmarks ) ]
+                ! [ save ( data.token.value, updateTime, bookmarks ) ]
 
         ( UnreadBookmarksResponse (Err err), NoAuth loginData ) ->
             NoAuth { loginData | status = AuthError err } ! []
@@ -330,7 +334,7 @@ viewLogin data =
                     ]
                     [ text error ]
                 , input
-                    [ type_ "text"
+                    [ type_ "password"
                     , placeholder "input your token here!"
                     , class "token-form-input"
                     , classList [ "error" => hasError ]

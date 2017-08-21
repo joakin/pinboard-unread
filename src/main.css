@@ -79,10 +79,14 @@ a {
   font-size: 0.7em;
 }
 .tag.selected {
-  background-color: #ceff99;
+  background-color: #adfbc3;
   color: rgba(0,0,0,0.8);
   text-shadow: 0px 1px rgba(255, 255, 255, 0.7);
-  box-shadow: 0 2px 5px rgba(127, 86, 0, 0.15), inset 0 -1px 1px rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 2px rgba(0, 127, 86, 0.25), inset 0 -1px 2px rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0,127,64,0.1);
+  border-width: 0 1px 1px 1px;
+  position: relative;
+  top: -2px;
 }
 
 .unread-tags {

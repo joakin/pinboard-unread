@@ -190,8 +190,12 @@ update msg model =
         ( LogOut, Auth data ) ->
             initEmpty ! [ logOut () ]
 
-        ( _, _ ) ->
-            model ! []
+        ( action, _ ) ->
+            let
+                _ =
+                    Debug.log "SKIPPED ACTION" action
+            in
+                model ! []
 
 
 fetchUnreadBookmarks : String -> String -> Task Error ( String, List BookmarkJSON )

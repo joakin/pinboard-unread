@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "elm-app start",
-    "build": "elm-app build",
+    "build": "PUBLIC_URL=./ elm-app build",
     "test": "elm-app test"
   },
   "directories": {

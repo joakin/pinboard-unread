@@ -98,10 +98,14 @@ a {
 }
 
 .stats {
-  text-align: right;
+  display: flex;
   font-size: 0.8em;
   margin-bottom: 1rem;
+  justify-content: space-between;
+  align-items: baseline;
 }
+.stats>:first-child>* { margin-right: 1em; }
+.stats>:last-child>* { margin-left: 1em; }
 
 .token-form {
   text-align: center;
@@ -136,15 +140,22 @@ a {
 
 .menu-bar {
   margin-bottom: 1em;
-  font-size: 0.7em;
+  font-size: 0.8em;
   text-align: right;
 }
 .menu-bar>* {
   margin-left: 1em;
+  white-space: nowrap;
 }
 
 .unread-page-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+}
+
+
+.emoji-icon {
+  display: inline-block;
+  padding: 0 0.3em;
 }

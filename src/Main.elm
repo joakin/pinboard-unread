@@ -10,16 +10,17 @@ import Task exposing (Task)
 import Bookmarks exposing (Bookmark, BookmarkJSON, Filter(..))
 import Tags exposing (Tags)
 import Ports exposing (save, logOut)
+import Date
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    Status
+    Page
 
 
-type Status
+type Page
     = NoAuth LoginData
     | Auth Data
 
@@ -30,18 +31,18 @@ type alias Token =
 
 type alias LoginData =
     { tokenInput : Token
-    , status : LoginStatus
+    , status : Status
     }
 
 
-type LoginStatus
-    = LoginForm
-    | TryingAuth
-    | AuthError Error
+type Status
+    = Initial
+    | Trying
+    | Error Error
 
 
 type Error
-    = StringError String
+    = UpdateSkippedError String
     | HttpError Http.Error
 
 
@@ -52,6 +53,7 @@ type alias Data =
     , token : Token
     , user : String
     , lastUpdateTime : String
+    , status : Status
     }
 
 
@@ -80,7 +82,7 @@ initEmpty : Model
 initEmpty =
     NoAuth
         { tokenInput = { value = "" }
-        , status = LoginForm
+        , status = Initial
         }
 
 
@@ -128,6 +130,7 @@ dataWithTokenAndLastUpdate token lastUpdateTime =
             |> List.head
             |> Maybe.withDefault "Unknown user"
     , lastUpdateTime = lastUpdateTime
+    , status = Initial
     }
 
 
@@ -140,6 +143,7 @@ type Msg
     | FormTokenInput String
     | FormTokenSubmit
     | UnreadBookmarksResponse (Result Error ( String, List BookmarkJSON ))
+    | FetchBookmarks
     | LogOut
 
 
@@ -153,7 +157,7 @@ update msg model =
             if String.isEmpty loginData.tokenInput.value then
                 model ! []
             else
-                NoAuth { loginData | status = TryingAuth }
+                NoAuth { loginData | status = Trying }
                     ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks loginData.tokenInput.value "" ]
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), NoAuth loginData ) ->
@@ -168,27 +172,35 @@ update msg model =
             in
                 mdl ! [ cmds, save ( loginData.tokenInput.value, updateTime, bookmarks ) ]
 
+        ( UnreadBookmarksResponse (Err err), NoAuth loginData ) ->
+            NoAuth { loginData | status = Error err } ! []
+
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), Auth data ) ->
             Auth
                 (dataWithBookmarksJSON bookmarks
                     { data
                         | lastUpdateTime = updateTime
+                        , status = Initial
                     }
                 )
                 ! [ save ( data.token.value, updateTime, bookmarks ) ]
 
-        ( UnreadBookmarksResponse (Err err), NoAuth loginData ) ->
-            NoAuth { loginData | status = AuthError err } ! []
-
         ( UnreadBookmarksResponse (Err err), Auth data ) ->
-            -- TODO: Handle failure when getting bookmarks fails
-            model ! []
+            Auth
+                { data | status = Error err }
+                ! []
 
         ( TagSelected t, Auth data ) ->
             Auth { data | filter = updateFilter t data.filter } ! []
 
         ( LogOut, Auth data ) ->
             initEmpty ! [ logOut () ]
+
+        ( FetchBookmarks, Auth data ) ->
+            Auth { data | status = Trying }
+                ! [ Task.attempt UnreadBookmarksResponse <|
+                        fetchUnreadBookmarks data.token.value data.lastUpdateTime
+                  ]
 
         ( action, _ ) ->
             let
@@ -210,7 +222,7 @@ fetchUnreadBookmarks token lastUpdateTime =
                         |> Task.mapError HttpError
                         |> Task.map (\bms -> ( updateTime, bms ))
                 else
-                    Task.fail (StringError "Update time is the same.")
+                    Task.fail (UpdateSkippedError "Update time is the same.")
             )
 
 
@@ -259,37 +271,19 @@ viewLogin : LoginData -> Html Msg
 viewLogin data =
     let
         showLoading =
-            data.status == TryingAuth
+            data.status == Trying
 
         ( hasError, error ) =
             case data.status of
-                AuthError err ->
+                Error err ->
                     let
                         msg =
                             case err of
-                                StringError str ->
-                                    str
+                                UpdateSkippedError str ->
+                                    Debug.crash "Got a UpdateSkippedError in Login view where there is no lastUpdateTime"
 
-                                HttpError (Http.BadUrl str) ->
-                                    "URL invalid"
-
-                                HttpError Http.Timeout ->
-                                    "Request timed out. Try again later"
-
-                                HttpError Http.NetworkError ->
-                                    "Network error. There was a problem with the request"
-
-                                HttpError (Http.BadStatus res) ->
-                                    "Request failed with code "
-                                        ++ toString res.status.code
-                                        ++ ", "
-                                        ++ res.status.message
-                                        ++ ". "
-                                        ++ res.body
-
-                                HttpError (Http.BadPayload err res) ->
-                                    "Error decoding the response. "
-                                        ++ err
+                                HttpError err_ ->
+                                    httpErrorToString err_
                     in
                         ( True, msg )
 
@@ -356,7 +350,7 @@ viewLogin data =
 
 
 viewBookmarks : Data -> Html Msg
-viewBookmarks { unread, tags, filter, user } =
+viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
     let
         unreadBookmarks =
             Maybe.withDefault [] unread
@@ -382,13 +376,95 @@ viewBookmarks { unread, tags, filter, user } =
                 ++ (case unread of
                         Just unreadBookmarks ->
                             [ section [ class "unread-tags" ] <| viewTags filter tags
-                            , section [ class "stats" ] [ text <| filteredTotal ++ " / " ++ total ]
+                            , section [ class "stats" ]
+                                [ span [ title "Last update date from pinboard.in" ]
+                                    [ viewRefresh status
+                                    , span [] [ text <| formatDate lastUpdateTime ]
+                                    ]
+                                , span [] [ text <| filteredTotal ++ " / " ++ total ]
+                                ]
                             , section [] <| List.map (viewBookmark filter) filteredUnread
                             ]
 
                         Nothing ->
                             [ info "No bookmarks fetched yet." ]
                    )
+
+
+viewRefresh : Status -> Html Msg
+viewRefresh status =
+    let
+        getRefreshBtn =
+            (\_ ->
+                a
+                    [ class "emoji-icon"
+                    , onClick FetchBookmarks
+                    ]
+                    [ text "✅" ]
+            )
+    in
+        case status of
+            Initial ->
+                getRefreshBtn ()
+
+            Trying ->
+                span
+                    [ class "emoji-icon animated infinite rotate"
+                    ]
+                    [ text "🌀" ]
+
+            Error (UpdateSkippedError err) ->
+                getRefreshBtn ()
+
+            Error (HttpError err) ->
+                a [ class "emoji-icon", title <| httpErrorToString err ] [ text "❌" ]
+
+
+formatDate : String -> String
+formatDate dateStr =
+    let
+        dateResult =
+            Date.fromString dateStr
+    in
+        case dateResult of
+            Ok date ->
+                (Date.day date |> toString)
+                    ++ " "
+                    ++ (Date.month date |> toString)
+                    ++ ", "
+                    -- ++ (Date.year date |> toString)
+                    ++ " "
+                    ++ (Date.hour date |> toString)
+                    ++ ":"
+                    ++ (Date.minute date |> toString)
+
+            Err err ->
+                err
+
+
+httpErrorToString : Http.Error -> String
+httpErrorToString err =
+    case err of
+        Http.BadUrl str ->
+            "URL invalid"
+
+        Http.Timeout ->
+            "Request timed out. Try again later"
+
+        Http.NetworkError ->
+            "Network error. There was a problem with the request"
+
+        Http.BadStatus res ->
+            "Request failed with code "
+                ++ toString res.status.code
+                ++ ", "
+                ++ res.status.message
+                ++ ". "
+                ++ res.body
+
+        Http.BadPayload err res ->
+            "Error decoding the response. "
+                ++ err
 
 
 viewTags : Filter -> Tags -> List (Html Msg)

@@ -28,6 +28,22 @@
   animation-duration: .75s;
 }
 
+@keyframes rotate {
+  from {
+    transform-origin: center center;
+    transform: rotate3d(0, 0, 1, 359deg);
+  }
+
+  to {
+    transform-origin: center;
+    transform: none;
+  }
+}
+.rotate {
+  animation-name: rotate;
+  animation-timing-function: linear;
+}
+
 /* @keyframes bounce { */
 /*   from, 20%, 53%, 80%, to { */
 /*     animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000); */

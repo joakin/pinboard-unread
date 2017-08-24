@@ -87,7 +87,7 @@ update msg model =
                     )
 
         ( UnreadBookmarksResponse (Err err), NoAuth loginData ) ->
-            NoAuth { loginData | status = Error err } ! []
+            NoAuth (Login.updateError err loginData) ! []
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), Auth data ) ->
             Auth

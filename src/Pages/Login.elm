@@ -4,6 +4,7 @@ module Pages.Login
         , initEmpty
         , updateTokenInput
         , updateFormSubmit
+        , updateError
         )
 
 import Types exposing (Token, Status(..))
@@ -43,3 +44,8 @@ updateFormSubmit onResponse data =
             ! [ Net.fetchUnreadBookmarks data.tokenInput.value ""
                     |> Task.attempt onResponse
               ]
+
+
+updateError : FetchBookmarksError -> LoginData -> LoginData
+updateError err data =
+    { data | status = Error err }

@@ -89,9 +89,6 @@ initEmpty =
 initWithJSON : DataJSON -> ( Model, Cmd Msg )
 initWithJSON { token, unread, lastUpdateTime } =
     let
-        data =
-            dataWithTokenAndLastUpdate token lastUpdateTime
-
         processData : Data -> Data
         processData =
             case unread of
@@ -100,10 +97,21 @@ initWithJSON { token, unread, lastUpdateTime } =
 
                 Nothing ->
                     identity
+
+        data : Data
+        data =
+            dataWithTokenAndLastUpdate token lastUpdateTime
+                |> processData
     in
-        Auth (processData { data | status = Trying })
-            ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks data.token.value data.lastUpdateTime
-              ]
+        updateUnreadBookmarks data
+
+
+updateUnreadBookmarks : Data -> ( Model, Cmd Msg )
+updateUnreadBookmarks data =
+    Auth { data | status = Trying }
+        ! [ fetchUnreadBookmarks data.token.value data.lastUpdateTime
+                |> Task.attempt UnreadBookmarksResponse
+          ]
 
 
 dataWithBookmarksJSON : List BookmarkJSON -> Data -> Data
@@ -161,7 +169,9 @@ update msg model =
                 model ! []
             else
                 NoAuth { loginData | status = Trying }
-                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks loginData.tokenInput.value "" ]
+                    ! [ fetchUnreadBookmarks loginData.tokenInput.value ""
+                            |> Task.attempt UnreadBookmarksResponse
+                      ]
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), NoAuth loginData ) ->
             -- Tried token on auth and it worked fine
@@ -200,10 +210,7 @@ update msg model =
             initEmpty ! [ logOut () ]
 
         ( FetchBookmarks, Auth data ) ->
-            Auth { data | status = Trying }
-                ! [ Task.attempt UnreadBookmarksResponse <|
-                        fetchUnreadBookmarks data.token.value data.lastUpdateTime
-                  ]
+            updateUnreadBookmarks data
 
         ( action, _ ) ->
             let

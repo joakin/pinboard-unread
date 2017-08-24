@@ -67,13 +67,8 @@ update msg model =
             NoAuth (Login.updateTokenInput txt loginData) ! []
 
         ( FormTokenSubmit, NoAuth loginData ) ->
-            if String.isEmpty loginData.tokenInput.value then
-                model ! []
-            else
-                NoAuth { loginData | status = Trying }
-                    ! [ Net.fetchUnreadBookmarks loginData.tokenInput.value ""
-                            |> Task.attempt UnreadBookmarksResponse
-                      ]
+            Login.updateFormSubmit UnreadBookmarksResponse loginData
+                |> T.mapFirst NoAuth
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), NoAuth loginData ) ->
             -- Tried token on auth and it worked fine

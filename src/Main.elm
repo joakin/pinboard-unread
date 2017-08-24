@@ -91,16 +91,19 @@ initWithJSON { token, unread, lastUpdateTime } =
     let
         data =
             dataWithTokenAndLastUpdate token lastUpdateTime
-    in
-        case unread of
-            Just unreadBookmarks ->
-                Auth (dataWithBookmarksJSON unreadBookmarks data)
-                    ! []
 
-            Nothing ->
-                Auth data
-                    ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks data.token.value data.lastUpdateTime
-                      ]
+        processData : Data -> Data
+        processData =
+            case unread of
+                Just unreadBookmarks ->
+                    dataWithBookmarksJSON unreadBookmarks
+
+                Nothing ->
+                    identity
+    in
+        Auth (processData { data | status = Trying })
+            ! [ Task.attempt UnreadBookmarksResponse <| fetchUnreadBookmarks data.token.value data.lastUpdateTime
+              ]
 
 
 dataWithBookmarksJSON : List BookmarkJSON -> Data -> Data

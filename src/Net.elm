@@ -3,14 +3,22 @@ module Net
         ( UpdateTimeJSON
         , decodeUpdateTime
         , lastUpdateTime
-        , unreadBookmarks
         , deleteBookmark
+        , httpErrorToString
+        , fetchUnreadBookmarks
+        , FetchBookmarksError(..)
         )
 
 import Json.Decode as D exposing (Decoder)
 import Http exposing (stringBody)
 import Util exposing ((=>))
 import Bookmarks exposing (BookmarkJSON, decodeBookmarkJSONList)
+import Task exposing (Task)
+
+
+type FetchBookmarksError
+    = UpdateSkippedError String
+    | HttpError Http.Error
 
 
 type alias UpdateTimeJSON =
@@ -56,6 +64,22 @@ unreadBookmarks token =
 deleteBookmark : String -> String -> Http.Request ActionResult
 deleteBookmark token uri =
     get "posts/delete" token [ "url" => uri ] decodeActionResult
+
+
+fetchUnreadBookmarks : String -> String -> Task FetchBookmarksError ( String, List BookmarkJSON )
+fetchUnreadBookmarks token lastUpdateTimeString =
+    Http.toTask (lastUpdateTime token)
+        |> Task.mapError HttpError
+        |> Task.andThen
+            (\{ updateTime } ->
+                if updateTime /= lastUpdateTimeString then
+                    unreadBookmarks token
+                        |> Http.toTask
+                        |> Task.mapError HttpError
+                        |> Task.map (\bms -> ( updateTime, bms ))
+                else
+                    Task.fail (UpdateSkippedError "Update time is the same.")
+            )
 
 
 
@@ -105,3 +129,28 @@ queryPair ( key, value ) =
 queryEscape : String -> String
 queryEscape string =
     String.join "+" (String.split "%20" (Http.encodeUri string))
+
+
+httpErrorToString : Http.Error -> String
+httpErrorToString err =
+    case err of
+        Http.BadUrl str ->
+            "URL invalid"
+
+        Http.Timeout ->
+            "Request timed out. Try again later"
+
+        Http.NetworkError ->
+            "Network error. There was a problem with the request"
+
+        Http.BadStatus res ->
+            "Request failed with code "
+                ++ toString res.status.code
+                ++ ", "
+                ++ res.status.message
+                ++ ". "
+                ++ res.body
+
+        Http.BadPayload err res ->
+            "Error decoding the response. "
+                ++ err

@@ -4,14 +4,16 @@ import Util exposing ((=>))
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Net
+import Net exposing (httpErrorToString, FetchBookmarksError(..))
 import Http
 import Task exposing (Task)
 import Bookmarks exposing (Bookmark, BookmarkJSON, viewBookmark)
 import Tags exposing (Tags, Filter(..), viewTags, viewTag)
 import Ports exposing (save, logOut)
-import Date
+import DateUtils exposing (formatDate)
 import Views exposing (info, tag, loadingIcon, okBtn, notOkBtn)
+import Types exposing (Token, Status(..))
+import Pages.Login as Login exposing (LoginData)
 
 
 ---- MODEL ----
@@ -26,27 +28,6 @@ type Page
     | Auth Data
 
 
-type alias Token =
-    { value : String }
-
-
-type alias LoginData =
-    { tokenInput : Token
-    , status : Status
-    }
-
-
-type Status
-    = Initial
-    | Trying
-    | Error Error
-
-
-type Error
-    = UpdateSkippedError String
-    | HttpError Http.Error
-
-
 type alias Data =
     { unread : Maybe (List Bookmark)
     , tags : Tags
@@ -54,7 +35,7 @@ type alias Data =
     , token : Token
     , user : String
     , lastUpdateTime : String
-    , status : Status
+    , status : Status FetchBookmarksError
     }
 
 
@@ -76,15 +57,7 @@ init { data } =
             initWithJSON d
 
         Nothing ->
-            initEmpty ! []
-
-
-initEmpty : Model
-initEmpty =
-    NoAuth
-        { tokenInput = { value = "" }
-        , status = Initial
-        }
+            NoAuth Login.initEmpty ! []
 
 
 initWithJSON : DataJSON -> ( Model, Cmd Msg )
@@ -110,7 +83,7 @@ initWithJSON { token, unread, lastUpdateTime } =
 updateUnreadBookmarks : Data -> ( Model, Cmd Msg )
 updateUnreadBookmarks data =
     Auth { data | status = Trying }
-        ! [ fetchUnreadBookmarks data.token.value data.lastUpdateTime
+        ! [ Net.fetchUnreadBookmarks data.token.value data.lastUpdateTime
                 |> Task.attempt UnreadBookmarksResponse
           ]
 
@@ -154,7 +127,7 @@ type Msg
     = TagSelected String
     | FormTokenInput String
     | FormTokenSubmit
-    | UnreadBookmarksResponse (Result Error ( String, List BookmarkJSON ))
+    | UnreadBookmarksResponse (Result FetchBookmarksError ( String, List BookmarkJSON ))
     | FetchBookmarks
     | DeleteBookmark String
     | DeleteBookmarkResponse String (Result Http.Error (Result String ()))
@@ -165,14 +138,14 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         ( FormTokenInput txt, NoAuth loginData ) ->
-            NoAuth { loginData | tokenInput = { value = txt } } ! []
+            NoAuth (Login.updateTokenInput txt loginData) ! []
 
         ( FormTokenSubmit, NoAuth loginData ) ->
             if String.isEmpty loginData.tokenInput.value then
                 model ! []
             else
                 NoAuth { loginData | status = Trying }
-                    ! [ fetchUnreadBookmarks loginData.tokenInput.value ""
+                    ! [ Net.fetchUnreadBookmarks loginData.tokenInput.value ""
                             |> Task.attempt UnreadBookmarksResponse
                       ]
 
@@ -210,7 +183,7 @@ update msg model =
             Auth { data | filter = updateFilter t data.filter } ! []
 
         ( LogOut, Auth data ) ->
-            initEmpty ! [ logOut () ]
+            NoAuth Login.initEmpty ! [ logOut () ]
 
         ( FetchBookmarks, Auth data ) ->
             updateUnreadBookmarks data
@@ -259,22 +232,6 @@ removeBookmark url data =
 
         Nothing ->
             data
-
-
-fetchUnreadBookmarks : String -> String -> Task Error ( String, List BookmarkJSON )
-fetchUnreadBookmarks token lastUpdateTime =
-    Http.toTask (Net.lastUpdateTime token)
-        |> Task.mapError HttpError
-        |> Task.andThen
-            (\{ updateTime } ->
-                if updateTime /= lastUpdateTime then
-                    Net.unreadBookmarks token
-                        |> Http.toTask
-                        |> Task.mapError HttpError
-                        |> Task.map (\bms -> ( updateTime, bms ))
-                else
-                    Task.fail (UpdateSkippedError "Update time is the same.")
-            )
 
 
 updateFilter : String -> Filter -> Filter
@@ -449,7 +406,7 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
                    )
 
 
-viewRefresh : Status -> Html Msg
+viewRefresh : Status FetchBookmarksError -> Html Msg
 viewRefresh status =
     case status of
         Initial ->
@@ -463,53 +420,6 @@ viewRefresh status =
 
         Error (HttpError err) ->
             notOkBtn <| httpErrorToString err
-
-
-formatDate : String -> String
-formatDate dateStr =
-    let
-        dateResult =
-            Date.fromString dateStr
-    in
-        case dateResult of
-            Ok date ->
-                (Date.day date |> toString)
-                    ++ " "
-                    ++ (Date.month date |> toString)
-                    ++ ", "
-                    -- ++ (Date.year date |> toString)
-                    ++ " "
-                    ++ (Date.hour date |> toString)
-                    ++ ":"
-                    ++ (Date.minute date |> toString)
-
-            Err err ->
-                err
-
-
-httpErrorToString : Http.Error -> String
-httpErrorToString err =
-    case err of
-        Http.BadUrl str ->
-            "URL invalid"
-
-        Http.Timeout ->
-            "Request timed out. Try again later"
-
-        Http.NetworkError ->
-            "Network error. There was a problem with the request"
-
-        Http.BadStatus res ->
-            "Request failed with code "
-                ++ toString res.status.code
-                ++ ", "
-                ++ res.status.message
-                ++ ". "
-                ++ res.body
-
-        Http.BadPayload err res ->
-            "Error decoding the response. "
-                ++ err
 
 
 main : Program Flags Model Msg

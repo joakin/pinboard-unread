@@ -1,7 +1,7 @@
 module Bookmarks exposing (..)
 
 import Json.Decode as D
-import Tags exposing (Tags)
+import Tags exposing (Tags, Filter(..))
 
 
 type alias Bookmark =
@@ -23,11 +23,6 @@ type alias BookmarkJSON =
     , time : String
     , toread : String
     }
-
-
-type Filter
-    = Unfiltered
-    | Tags Tags
 
 
 decodeBookmarkJSONList : D.Decoder (List BookmarkJSON)

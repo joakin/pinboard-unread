@@ -1,10 +1,17 @@
 module Tags exposing (..)
 
 import Set exposing (Set)
+import Html exposing (Html)
+import Views exposing (tag)
 
 
 type alias Tags =
     Set String
+
+
+type Filter
+    = Unfiltered
+    | Tags Tags
 
 
 untagged : String
@@ -45,3 +52,25 @@ remove =
 toList : Tags -> List String
 toList =
     Set.toList
+
+
+viewTags : Filter -> (String -> msg) -> Tags -> List (Html msg)
+viewTags filter onTagClick tags =
+    let
+        tagsList =
+            toList tags
+    in
+        List.map (viewTag filter onTagClick) tagsList
+
+
+viewTag : Filter -> (String -> msg) -> String -> Html msg
+viewTag filter onTagClick t =
+    case filter of
+        Unfiltered ->
+            tag { selected = False, onClick = onTagClick } t
+
+        Tags tags ->
+            if isMember t tags then
+                tag { selected = True, onClick = onTagClick } t
+            else
+                tag { selected = False, onClick = onTagClick } t

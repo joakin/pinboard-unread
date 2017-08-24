@@ -7,8 +7,8 @@ import Html.Events exposing (..)
 import Net
 import Http
 import Task exposing (Task)
-import Bookmarks exposing (Bookmark, BookmarkJSON, Filter(..))
-import Tags exposing (Tags)
+import Bookmarks exposing (Bookmark, BookmarkJSON)
+import Tags exposing (Tags, Filter(..), viewTags, viewTag)
 import Ports exposing (save, logOut)
 import Date
 import Views exposing (info, tag)
@@ -426,7 +426,7 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
             ]
                 ++ (case unread of
                         Just unreadBookmarks ->
-                            [ section [ class "unread-tags" ] <| viewTags filter tags
+                            [ section [ class "unread-tags" ] <| viewTags filter TagSelected tags
                             , section [ class "stats" ]
                                 [ span [ title "Last update date from pinboard.in" ]
                                     [ viewRefresh status
@@ -525,28 +525,6 @@ httpErrorToString err =
                 ++ err
 
 
-viewTags : Filter -> Tags -> List (Html Msg)
-viewTags filter tags =
-    let
-        tagsList =
-            Tags.toList tags
-    in
-        List.map (viewTag filter) tagsList
-
-
-viewTag : Filter -> String -> Html Msg
-viewTag filter t =
-    case filter of
-        Unfiltered ->
-            tag { selected = False, onClick = TagSelected } t
-
-        Tags tags ->
-            if Tags.isMember t tags then
-                tag { selected = True, onClick = TagSelected } t
-            else
-                tag { selected = False, onClick = TagSelected } t
-
-
 viewBookmark : Filter -> Bookmark -> Html Msg
 viewBookmark filter bookmark =
     div [ class "bookmark" ]
@@ -576,7 +554,7 @@ viewBookmark filter bookmark =
             if (Maybe.withDefault Tags.untagged <| List.head bookmark.tags) == Tags.untagged then
                 [ info "No tags" ]
             else
-                List.map (viewTag filter) bookmark.tags
+                List.map (viewTag filter TagSelected) bookmark.tags
         ]
 
 

@@ -12,8 +12,10 @@ import Tags exposing (Tags, Filter(..), viewTags, viewTag)
 import Ports exposing (save, logOut)
 import DateUtils exposing (formatDate)
 import Views exposing (info, tag, loadingIcon, okBtn, notOkBtn)
-import Types exposing (Token, Status(..))
+import Types exposing (Token, Status(..), DataJSON)
 import Pages.Login as Login exposing (LoginData)
+import Pages.Unread as Unread exposing (Data)
+import Tuple2 as T
 
 
 ---- MODEL ----
@@ -28,24 +30,6 @@ type Page
     | Auth Data
 
 
-type alias Data =
-    { unread : Maybe (List Bookmark)
-    , tags : Tags
-    , filter : Filter
-    , token : Token
-    , user : String
-    , lastUpdateTime : String
-    , status : Status FetchBookmarksError
-    }
-
-
-type alias DataJSON =
-    { unread : Maybe (List BookmarkJSON)
-    , token : String
-    , lastUpdateTime : String
-    }
-
-
 type alias Flags =
     { data : Maybe DataJSON }
 
@@ -54,69 +38,11 @@ init : Flags -> ( Model, Cmd Msg )
 init { data } =
     case data of
         Just d ->
-            initWithJSON d
+            Unread.initWithJSON d UnreadBookmarksResponse
+                |> T.mapFirst Auth
 
         Nothing ->
             NoAuth Login.initEmpty ! []
-
-
-initWithJSON : DataJSON -> ( Model, Cmd Msg )
-initWithJSON { token, unread, lastUpdateTime } =
-    let
-        processData : Data -> Data
-        processData =
-            case unread of
-                Just unreadBookmarks ->
-                    dataWithBookmarksJSON unreadBookmarks
-
-                Nothing ->
-                    identity
-
-        data : Data
-        data =
-            dataWithTokenAndLastUpdate token lastUpdateTime
-                |> processData
-    in
-        updateUnreadBookmarks data
-
-
-updateUnreadBookmarks : Data -> ( Model, Cmd Msg )
-updateUnreadBookmarks data =
-    Auth { data | status = Trying }
-        ! [ Net.fetchUnreadBookmarks data.token.value data.lastUpdateTime
-                |> Task.attempt UnreadBookmarksResponse
-          ]
-
-
-dataWithBookmarksJSON : List BookmarkJSON -> Data -> Data
-dataWithBookmarksJSON unreadBookmarks data =
-    let
-        bookmarks =
-            List.map Bookmarks.fromJSON unreadBookmarks
-
-        tags =
-            Bookmarks.tagsFrom bookmarks
-    in
-        { data
-            | unread = Just bookmarks
-            , tags = tags
-        }
-
-
-dataWithTokenAndLastUpdate : String -> String -> Data
-dataWithTokenAndLastUpdate token lastUpdateTime =
-    { unread = Nothing
-    , tags = Tags.empty
-    , filter = Unfiltered
-    , token = { value = token }
-    , user =
-        token
-            |> String.split ":"
-            |> List.head
-            |> Maybe.withDefault "Unknown user"
-    , lastUpdateTime = lastUpdateTime
-    , status = Initial
-    }
 
 
 
@@ -151,22 +77,27 @@ update msg model =
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), NoAuth loginData ) ->
             -- Tried token on auth and it worked fine
-            let
-                ( mdl, cmds ) =
-                    initWithJSON
-                        { token = loginData.tokenInput.value
-                        , lastUpdateTime = updateTime
-                        , unread = Just bookmarks
-                        }
-            in
-                mdl ! [ cmds, save ( loginData.tokenInput.value, updateTime, bookmarks ) ]
+            Unread.initWithJSON
+                { token = loginData.tokenInput.value
+                , lastUpdateTime = updateTime
+                , unread = Just bookmarks
+                }
+                UnreadBookmarksResponse
+                |> T.mapFirst Auth
+                |> T.mapSecond
+                    (\cmds ->
+                        Cmd.batch
+                            [ cmds
+                            , save ( loginData.tokenInput.value, updateTime, bookmarks )
+                            ]
+                    )
 
         ( UnreadBookmarksResponse (Err err), NoAuth loginData ) ->
             NoAuth { loginData | status = Error err } ! []
 
         ( UnreadBookmarksResponse (Ok ( updateTime, bookmarks )), Auth data ) ->
             Auth
-                (dataWithBookmarksJSON bookmarks
+                (Unread.dataWithBookmarksJSON bookmarks
                     { data
                         | lastUpdateTime = updateTime
                         , status = Initial
@@ -186,7 +117,8 @@ update msg model =
             NoAuth Login.initEmpty ! [ logOut () ]
 
         ( FetchBookmarks, Auth data ) ->
-            updateUnreadBookmarks data
+            Unread.updateUnreadBookmarks UnreadBookmarksResponse data
+                |> T.mapFirst Auth
 
         ( DeleteBookmark url, Auth data ) ->
             model

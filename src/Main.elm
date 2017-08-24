@@ -394,7 +394,7 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
 viewRefresh : Status -> Html Msg
 viewRefresh status =
     let
-        getRefreshBtn =
+        refreshBtn =
             (\_ ->
                 a
                     [ class "emoji-icon"
@@ -405,19 +405,21 @@ viewRefresh status =
     in
         case status of
             Initial ->
-                getRefreshBtn ()
+                refreshBtn ()
 
             Trying ->
-                span
-                    [ class "emoji-icon animated infinite rotate"
-                    ]
-                    [ text "🌀" ]
+                loadingIcon ()
 
             Error (UpdateSkippedError err) ->
-                getRefreshBtn ()
+                refreshBtn ()
 
             Error (HttpError err) ->
                 a [ class "emoji-icon", title <| httpErrorToString err ] [ text "❌" ]
+
+
+loadingIcon : () -> Html Msg
+loadingIcon _ =
+    span [ class "emoji-icon animated infinite rotate" ] [ text "🌀" ]
 
 
 formatDate : String -> String

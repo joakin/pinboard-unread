@@ -6,7 +6,6 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Net exposing (httpErrorToString, FetchBookmarksError(..))
 import Http
-import Task exposing (Task)
 import Bookmarks exposing (Bookmark, BookmarkJSON, viewBookmark)
 import Tags exposing (Tags, Filter(..), viewTags, viewTag)
 import Ports exposing (save, logOut)

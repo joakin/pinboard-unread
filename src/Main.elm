@@ -155,6 +155,8 @@ type Msg
     | FormTokenSubmit
     | UnreadBookmarksResponse (Result Error ( String, List BookmarkJSON ))
     | FetchBookmarks
+    | DeleteBookmark String
+    | DeleteBookmarkResponse String (Result Http.Error (Result String ()))
     | LogOut
 
 
@@ -212,12 +214,50 @@ update msg model =
         ( FetchBookmarks, Auth data ) ->
             updateUnreadBookmarks data
 
+        ( DeleteBookmark url, Auth data ) ->
+            model
+                ! [ Net.deleteBookmark data.token.value url
+                        |> Http.send (DeleteBookmarkResponse url)
+                  ]
+
+        ( DeleteBookmarkResponse url (Ok _), Auth data ) ->
+            -- It doesn't matter if the API responded OK or not. If it was OK,
+            -- then it removed it, if it was not, then the URL didn't exist on
+            -- the bookmarks, so we remove it anyways from the model.
+            Auth (removeBookmark url data) ! []
+
+        ( DeleteBookmarkResponse url (Err err), Auth data ) ->
+            -- If the request failed don't do anything for now
+            -- TODO: Have a deleteStatus: Status per bookmark to indicate errors?
+            -- Or toasts?
+            model ! []
+
         ( action, _ ) ->
             let
                 _ =
                     Debug.log "SKIPPED ACTION" action
             in
                 model ! []
+
+
+removeBookmark : String -> Data -> Data
+removeBookmark url data =
+    case data.unread of
+        Just bs ->
+            let
+                bookmarks =
+                    List.filter (\b -> b.href /= url) bs
+
+                tags =
+                    Bookmarks.tagsFrom bookmarks
+            in
+                { data
+                    | unread = Just bookmarks
+                    , tags = tags
+                }
+
+        Nothing ->
+            data
 
 
 fetchUnreadBookmarks : String -> String -> Task Error ( String, List BookmarkJSON )
@@ -432,6 +472,11 @@ loadingIcon _ =
     span [ class "emoji-icon animated infinite rotate" ] [ text "🌀" ]
 
 
+deleteBtn : Msg -> Html Msg
+deleteBtn msg =
+    a [ class "emoji-icon", onClick msg ] [ text "✖️" ]
+
+
 formatDate : String -> String
 formatDate dateStr =
     let
@@ -513,6 +558,9 @@ viewBookmark filter bookmark =
                 ]
                 [ text
                     bookmark.description
+                ]
+            , div [ class "bookmark-actions" ]
+                [ deleteBtn (DeleteBookmark bookmark.href)
                 ]
             ]
         , div [ class "bookmark-separator" ] []

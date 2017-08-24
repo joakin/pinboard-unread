@@ -4,6 +4,7 @@ module Net
         , decodeUpdateTime
         , lastUpdateTime
         , unreadBookmarks
+        , deleteBookmark
         )
 
 import Json.Decode as D exposing (Decoder)
@@ -23,6 +24,25 @@ decodeUpdateTime =
         (D.field "update_time" D.string)
 
 
+type alias ActionResult =
+    Result String ()
+
+
+decodeActionResult : Decoder ActionResult
+decodeActionResult =
+    D.field "result_code" D.string
+        |> D.andThen
+            (\resultCode ->
+                D.succeed <|
+                    case resultCode of
+                        "done" ->
+                            Ok ()
+
+                        str ->
+                            Err str
+            )
+
+
 lastUpdateTime : String -> Http.Request UpdateTimeJSON
 lastUpdateTime token =
     get "posts/update" token [] decodeUpdateTime
@@ -31,6 +51,11 @@ lastUpdateTime token =
 unreadBookmarks : String -> Http.Request (List BookmarkJSON)
 unreadBookmarks token =
     get "posts/all" token [ "toread" => "yes" ] decodeBookmarkJSONList
+
+
+deleteBookmark : String -> String -> Http.Request ActionResult
+deleteBookmark token uri =
+    get "posts/delete" token [ "url" => uri ] decodeActionResult
 
 
 

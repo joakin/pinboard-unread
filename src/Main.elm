@@ -11,6 +11,7 @@ import Bookmarks exposing (Bookmark, BookmarkJSON, Filter(..))
 import Tags exposing (Tags)
 import Ports exposing (save, logOut)
 import Date
+import Views exposing (info, tag)
 
 
 ---- MODEL ----
@@ -577,26 +578,6 @@ viewBookmark filter bookmark =
             else
                 List.map (viewTag filter) bookmark.tags
         ]
-
-
-info : String -> Html Msg
-info txt =
-    span [ class "info" ] [ text txt ]
-
-
-type alias TagOptions =
-    { selected : Bool
-    , onClick : String -> Msg
-    }
-
-
-tag : TagOptions -> String -> Html Msg
-tag options txt =
-    span
-        [ classList [ "tag" => True, "selected" => options.selected ]
-        , onClick (options.onClick txt)
-        ]
-        [ text txt ]
 
 
 main : Program Flags Model Msg

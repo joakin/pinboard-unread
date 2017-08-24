@@ -7,7 +7,7 @@ import Html.Events exposing (..)
 import Net
 import Http
 import Task exposing (Task)
-import Bookmarks exposing (Bookmark, BookmarkJSON)
+import Bookmarks exposing (Bookmark, BookmarkJSON, viewBookmark)
 import Tags exposing (Tags, Filter(..), viewTags, viewTag)
 import Ports exposing (save, logOut)
 import Date
@@ -434,7 +434,14 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
                                     ]
                                 , span [] [ text <| filteredTotal ++ " / " ++ total ]
                                 ]
-                            , section [] <| List.map (viewBookmark filter) filteredUnread
+                            , section [] <|
+                                List.map
+                                    (viewBookmark filter
+                                        { onDelete = DeleteBookmark
+                                        , onTagSelect = TagSelected
+                                        }
+                                    )
+                                    filteredUnread
                             ]
 
                         Nothing ->
@@ -523,39 +530,6 @@ httpErrorToString err =
         Http.BadPayload err res ->
             "Error decoding the response. "
                 ++ err
-
-
-viewBookmark : Filter -> Bookmark -> Html Msg
-viewBookmark filter bookmark =
-    div [ class "bookmark" ]
-        [ div [ class "bookmark-header" ]
-            [ a
-                [ href bookmark.href
-                , target "_blank"
-                , title bookmark.description
-                , class "bookmark-header-link"
-                ]
-                [ text
-                    bookmark.description
-                ]
-            , div [ class "bookmark-actions" ]
-                [ deleteBtn (DeleteBookmark bookmark.href)
-                ]
-            ]
-        , div [ class "bookmark-separator" ] []
-        , div [ class "bookmark-description" ]
-            [ if String.isEmpty bookmark.extended then
-                info "No description"
-              else
-                text bookmark.extended
-            ]
-        , div [ class "bookmark-separator" ] []
-        , div [ class "bookmark-footer" ] <|
-            if (Maybe.withDefault Tags.untagged <| List.head bookmark.tags) == Tags.untagged then
-                [ info "No tags" ]
-            else
-                List.map (viewTag filter TagSelected) bookmark.tags
-        ]
 
 
 main : Program Flags Model Msg

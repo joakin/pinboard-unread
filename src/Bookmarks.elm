@@ -1,7 +1,12 @@
 module Bookmarks exposing (..)
 
 import Json.Decode as D
-import Tags exposing (Tags, Filter(..))
+import Tags exposing (Tags, Filter(..), viewTag)
+import Html exposing (Html, div, a, text)
+import Html.Attributes exposing (class, href, target, title)
+import Html.Events exposing (onClick)
+import Util exposing ((=>))
+import Views exposing (info, deleteBtn)
 
 
 type alias Bookmark =
@@ -78,3 +83,42 @@ tagsFrom bookmarks =
 tagsSetFromBookmark : Bookmark -> Tags
 tagsSetFromBookmark b =
     List.foldl (\t s -> Tags.add t s) Tags.empty b.tags
+
+
+type alias BookmarkOptions msg =
+    { onDelete : String -> msg
+    , onTagSelect : String -> msg
+    }
+
+
+viewBookmark : Filter -> BookmarkOptions msg -> Bookmark -> Html msg
+viewBookmark filter options bookmark =
+    div [ class "bookmark" ]
+        [ div [ class "bookmark-header" ]
+            [ a
+                [ href bookmark.href
+                , target "_blank"
+                , title bookmark.description
+                , class "bookmark-header-link"
+                ]
+                [ text
+                    bookmark.description
+                ]
+            , div [ class "bookmark-actions" ]
+                [ deleteBtn (options.onDelete bookmark.href)
+                ]
+            ]
+        , div [ class "bookmark-separator" ] []
+        , div [ class "bookmark-description" ]
+            [ if String.isEmpty bookmark.extended then
+                info "No description"
+              else
+                text bookmark.extended
+            ]
+        , div [ class "bookmark-separator" ] []
+        , div [ class "bookmark-footer" ] <|
+            if (Maybe.withDefault Tags.untagged <| List.head bookmark.tags) == Tags.untagged then
+                [ info "No tags" ]
+            else
+                List.map (viewTag filter options.onTagSelect) bookmark.tags
+        ]

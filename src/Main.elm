@@ -11,7 +11,7 @@ import Bookmarks exposing (Bookmark, BookmarkJSON, viewBookmark)
 import Tags exposing (Tags, Filter(..), viewTags, viewTag)
 import Ports exposing (save, logOut)
 import Date
-import Views exposing (info, tag)
+import Views exposing (info, tag, loadingIcon, okBtn, notOkBtn)
 
 
 ---- MODEL ----
@@ -451,38 +451,18 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
 
 viewRefresh : Status -> Html Msg
 viewRefresh status =
-    let
-        refreshBtn =
-            (\_ ->
-                a
-                    [ class "emoji-icon"
-                    , onClick FetchBookmarks
-                    ]
-                    [ text "✅" ]
-            )
-    in
-        case status of
-            Initial ->
-                refreshBtn ()
+    case status of
+        Initial ->
+            okBtn FetchBookmarks
 
-            Trying ->
-                loadingIcon ()
+        Trying ->
+            loadingIcon ()
 
-            Error (UpdateSkippedError err) ->
-                refreshBtn ()
+        Error (UpdateSkippedError err) ->
+            okBtn FetchBookmarks
 
-            Error (HttpError err) ->
-                a [ class "emoji-icon", title <| httpErrorToString err ] [ text "❌" ]
-
-
-loadingIcon : () -> Html Msg
-loadingIcon _ =
-    span [ class "emoji-icon animated infinite rotate" ] [ text "🌀" ]
-
-
-deleteBtn : Msg -> Html Msg
-deleteBtn msg =
-    a [ class "emoji-icon", onClick msg ] [ text "✖️" ]
+        Error (HttpError err) ->
+            notOkBtn <| httpErrorToString err
 
 
 formatDate : String -> String

@@ -9,7 +9,7 @@ module Pages.Login
         )
 
 import Types exposing (Token, Status(..))
-import Bookmarks exposing (BookmarkJSON)
+import Bookmarks exposing (Bookmark)
 import Net exposing (FetchBookmarksError(..))
 import Task
 import Html exposing (Html, div, input, text, h2, p, a, span)
@@ -36,12 +36,12 @@ initEmpty =
 type Msg
     = FormTokenInput String
     | FormTokenSubmit
-    | UnreadBookmarksResponse (Result FetchBookmarksError ( String, List BookmarkJSON ))
+    | UnreadBookmarksResponse (Result FetchBookmarksError ( String, List Bookmark ))
 
 
 type Response
     = Cmd (Cmd Msg)
-    | Success String String (List BookmarkJSON)
+    | Success String String (List Bookmark)
     | Idle
 
 

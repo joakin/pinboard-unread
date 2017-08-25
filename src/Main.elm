@@ -3,7 +3,7 @@ module Main exposing (..)
 import Html exposing (Html, div, header, h1, text)
 import Html.Attributes exposing (class)
 import Ports
-import Types exposing (DataJSON)
+import Types
 import Pages.Login as Login
 import Pages.Unread as Unread
 import Tuple2 as T
@@ -23,14 +23,14 @@ type Page
 
 
 type alias Flags =
-    { data : Maybe DataJSON }
+    { data : Maybe Types.FlagsData }
 
 
 init : Flags -> ( Model, Cmd Msg )
 init { data } =
     case data of
         Just d ->
-            Unread.initWithJSONAndFetch d
+            Unread.initWithFlagsAndFetch d
                 |> T.mapFirst UnreadPage
                 |> T.mapSecond (Cmd.map UnreadMsg)
 

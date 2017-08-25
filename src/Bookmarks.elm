@@ -21,26 +21,14 @@ type alias Bookmark =
     }
 
 
-type alias BookmarkJSON =
-    { description : String
-    , extended : String
-    , hash : String
-    , href : String
-    , shared : Bool
-    , tags : Tags
-    , time : String
-    , toread : Bool
-    }
+decodeBookmarkList : D.Decoder (List Bookmark)
+decodeBookmarkList =
+    D.list decodeBookmark
 
 
-decodeBookmarkJSONList : D.Decoder (List BookmarkJSON)
-decodeBookmarkJSONList =
-    D.list decodeBookmarkJSON
-
-
-decodeBookmarkJSON : D.Decoder BookmarkJSON
-decodeBookmarkJSON =
-    D.map8 BookmarkJSON
+decodeBookmark : D.Decoder Bookmark
+decodeBookmark =
+    D.map8 Bookmark
         (D.field "description" (D.string))
         (D.field "extended" (D.string))
         (D.field "hash" (D.string))
@@ -51,13 +39,13 @@ decodeBookmarkJSON =
         (D.field "toread" (D.map yesToBool (D.string)))
 
 
-encodeBookmarkJSONList : List BookmarkJSON -> E.Value
-encodeBookmarkJSONList list =
-    E.list (List.map encodeBookmarkJSON list)
+encodeBookmarkList : List Bookmark -> E.Value
+encodeBookmarkList list =
+    E.list (List.map encodeBookmark list)
 
 
-encodeBookmarkJSON : BookmarkJSON -> E.Value
-encodeBookmarkJSON b =
+encodeBookmark : Bookmark -> E.Value
+encodeBookmark b =
     E.object
         [ "description" => E.string b.description
         , "extended" => E.string b.extended
@@ -68,19 +56,6 @@ encodeBookmarkJSON b =
         , "time" => E.string b.time
         , "toread" => E.string (boolToYes b.toread)
         ]
-
-
-fromJSON : BookmarkJSON -> Bookmark
-fromJSON bj =
-    { description = bj.description
-    , extended = bj.extended
-    , hash = bj.hash
-    , href = bj.href
-    , shared = bj.shared
-    , tags = bj.tags
-    , time = bj.time
-    , toread = bj.toread
-    }
 
 
 yesToBool : String -> Bool

@@ -2,7 +2,7 @@ module Types
     exposing
         ( Token
         , Status(..)
-        , DataJSON
+        , FlagsData
         )
 
 import Json.Decode
@@ -18,7 +18,7 @@ type alias Token =
     { value : String }
 
 
-type alias DataJSON =
+type alias FlagsData =
     { unread : Maybe Json.Decode.Value
     , token : String
     , lastUpdateTime : String

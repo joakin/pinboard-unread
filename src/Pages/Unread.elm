@@ -4,15 +4,15 @@ module Pages.Unread
         , Msg
         , Response(..)
         , initWithDecodedBookmarksAndSave
-        , initWithJSONAndFetch
+        , initWithFlagsAndFetch
         , viewBookmarks
         , update
         )
 
-import Types exposing (Token, Status(..), DataJSON)
+import Types exposing (Token, Status(..), FlagsData)
 import Net exposing (FetchBookmarksError(..))
 import Tags exposing (Tags, Filter(..))
-import Bookmarks exposing (BookmarkJSON, Bookmark)
+import Bookmarks exposing (Bookmark, Bookmark)
 import Task
 import Http
 import Html exposing (Html, div, section, span, text, header, h2, a)
@@ -38,13 +38,13 @@ type alias Data =
     }
 
 
-initWithDecodedBookmarksAndSave : { token : String, lastUpdateTime : String, unread : Maybe (List BookmarkJSON) } -> ( Data, Cmd Msg )
+initWithDecodedBookmarksAndSave : { token : String, lastUpdateTime : String, unread : Maybe (List Bookmark) } -> ( Data, Cmd Msg )
 initWithDecodedBookmarksAndSave { token, unread, lastUpdateTime } =
     dataWithTokenAndLastUpdate token lastUpdateTime
         |> (\data ->
                 case unread of
                     Just unreadBookmarks ->
-                        dataWithBookmarksJSON unreadBookmarks data
+                        dataWithBookmarks unreadBookmarks data
                             => save token lastUpdateTime unreadBookmarks
 
                     Nothing ->
@@ -52,16 +52,16 @@ initWithDecodedBookmarksAndSave { token, unread, lastUpdateTime } =
            )
 
 
-initWithJSONAndFetch : DataJSON -> ( Data, Cmd Msg )
-initWithJSONAndFetch { token, unread, lastUpdateTime } =
+initWithFlagsAndFetch : FlagsData -> ( Data, Cmd Msg )
+initWithFlagsAndFetch { token, unread, lastUpdateTime } =
     let
         processData : Data -> Data
         processData =
             case unread of
                 Just jsonValue ->
-                    case D.decodeValue Bookmarks.decodeBookmarkJSONList jsonValue of
+                    case D.decodeValue Bookmarks.decodeBookmarkList jsonValue of
                         Ok unreadBookmarks ->
-                            dataWithBookmarksJSON unreadBookmarks
+                            dataWithBookmarks unreadBookmarks
 
                         Err err ->
                             let
@@ -78,12 +78,9 @@ initWithJSONAndFetch { token, unread, lastUpdateTime } =
             |> updateUnreadBookmarks
 
 
-dataWithBookmarksJSON : List BookmarkJSON -> Data -> Data
-dataWithBookmarksJSON unreadBookmarks data =
+dataWithBookmarks : List Bookmark -> Data -> Data
+dataWithBookmarks bookmarks data =
     let
-        bookmarks =
-            List.map Bookmarks.fromJSON unreadBookmarks
-
         tags =
             Bookmarks.tagsFrom bookmarks
     in
@@ -137,19 +134,19 @@ removeBookmark url data =
             data
 
 
-save : String -> String -> List BookmarkJSON -> Cmd Msg
+save : String -> String -> List Bookmark -> Cmd Msg
 save token updateTime bookmarks =
     Ports.save
         ( token
         , updateTime
-        , (Bookmarks.encodeBookmarkJSONList bookmarks)
+        , (Bookmarks.encodeBookmarkList bookmarks)
         )
 
 
 type Msg
     = TagSelected String
     | FetchBookmarks
-    | UnreadBookmarksResponse (Result FetchBookmarksError ( String, List BookmarkJSON ))
+    | UnreadBookmarksResponse (Result FetchBookmarksError ( String, List Bookmark ))
     | DeleteBookmark String
     | DeleteBookmarkResponse String (Result Http.Error (Result String ()))
     | SignOff
@@ -165,7 +162,7 @@ update : Msg -> Data -> ( Data, Response )
 update msg data =
     case msg of
         UnreadBookmarksResponse (Ok ( updateTime, bookmarks )) ->
-            dataWithBookmarksJSON bookmarks
+            dataWithBookmarks bookmarks
                 { data
                     | lastUpdateTime = updateTime
                     , status = Initial

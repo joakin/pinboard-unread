@@ -1,18 +1,15 @@
 module Net
     exposing
-        ( UpdateTimeJSON
-        , decodeUpdateTime
-        , lastUpdateTime
-        , deleteBookmark
-        , httpErrorToString
+        ( deleteBookmark
         , fetchUnreadBookmarks
+        , httpErrorToString
         , FetchBookmarksError(..)
         )
 
 import Json.Decode as D exposing (Decoder)
 import Http exposing (stringBody)
 import Util exposing ((=>))
-import Bookmarks exposing (BookmarkJSON, decodeBookmarkJSONList)
+import Bookmarks exposing (Bookmark, decodeBookmarkList)
 import Task exposing (Task)
 
 
@@ -21,14 +18,14 @@ type FetchBookmarksError
     | HttpError Http.Error
 
 
-type alias UpdateTimeJSON =
+type alias UpdateTimeResponse =
     { updateTime : String
     }
 
 
-decodeUpdateTime : Decoder UpdateTimeJSON
+decodeUpdateTime : Decoder UpdateTimeResponse
 decodeUpdateTime =
-    D.map UpdateTimeJSON
+    D.map UpdateTimeResponse
         (D.field "update_time" D.string)
 
 
@@ -51,14 +48,14 @@ decodeActionResult =
             )
 
 
-lastUpdateTime : String -> Http.Request UpdateTimeJSON
+lastUpdateTime : String -> Http.Request UpdateTimeResponse
 lastUpdateTime token =
     get "posts/update" token [] decodeUpdateTime
 
 
-unreadBookmarks : String -> Http.Request (List BookmarkJSON)
+unreadBookmarks : String -> Http.Request (List Bookmark)
 unreadBookmarks token =
-    get "posts/all" token [ "toread" => "yes" ] decodeBookmarkJSONList
+    get "posts/all" token [ "toread" => "yes" ] decodeBookmarkList
 
 
 deleteBookmark : String -> String -> Http.Request ActionResult
@@ -66,7 +63,7 @@ deleteBookmark token uri =
     get "posts/delete" token [ "url" => uri ] decodeActionResult
 
 
-fetchUnreadBookmarks : String -> String -> Task FetchBookmarksError ( String, List BookmarkJSON )
+fetchUnreadBookmarks : String -> String -> Task FetchBookmarksError ( String, List Bookmark )
 fetchUnreadBookmarks token lastUpdateTimeString =
     Http.toTask (lastUpdateTime token)
         |> Task.mapError HttpError

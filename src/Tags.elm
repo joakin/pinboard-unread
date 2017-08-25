@@ -3,6 +3,7 @@ module Tags exposing (..)
 import Set exposing (Set)
 import Html exposing (Html)
 import Views exposing (tag)
+import String
 
 
 type Filter
@@ -36,9 +37,9 @@ type alias Tags =
     Set String
 
 
-untagged : String
+untagged : Tags
 untagged =
-    "[no tags]"
+    add "[no tags]" empty
 
 
 empty : Tags
@@ -51,6 +52,16 @@ isEmpty =
     Set.isEmpty
 
 
+fromString : String -> Tags
+fromString tagsStr =
+    if String.isEmpty tagsStr then
+        untagged
+    else
+        tagsStr
+            |> String.words
+            |> Set.fromList
+
+
 add : String -> Tags -> Tags
 add tag tags =
     Set.insert tag tags
@@ -59,6 +70,12 @@ add tag tags =
 isMember : String -> Tags -> Bool
 isMember =
     Set.member
+
+
+any : Tags -> Tags -> Bool
+any t1 t2 =
+    Set.intersect t1 t2
+        |> (not << Set.isEmpty)
 
 
 merge : Tags -> Tags -> Tags

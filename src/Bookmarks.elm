@@ -1,7 +1,7 @@
 module Bookmarks exposing (..)
 
 import Json.Decode as D
-import Tags exposing (Tags, Filter(..), viewTag)
+import Tags exposing (Tags, Filter(..))
 import Html exposing (Html, div, a, text)
 import Html.Attributes exposing (class, href, target, title)
 import Views exposing (info, deleteBtn)
@@ -13,7 +13,7 @@ type alias Bookmark =
     , hash : String
     , href : String
     , shared : Bool
-    , tags : List String
+    , tags : Tags
     , time : String
     , toread : Bool
     }
@@ -56,11 +56,7 @@ fromJSON bj =
     , hash = bj.hash
     , href = bj.href
     , shared = bj.shared
-    , tags =
-        if String.isEmpty bj.tags then
-            [ Tags.untagged ]
-        else
-            String.words bj.tags
+    , tags = Tags.fromString bj.tags
     , time = bj.time
     , toread = bj.toread
     }
@@ -77,21 +73,16 @@ filter f bookmark =
         Unfiltered ->
             True
 
-        Tags tags ->
-            List.any (\t -> Tags.isMember t tags) bookmark.tags
+        Tags selectedTags ->
+            Tags.any selectedTags bookmark.tags
 
 
 tagsFrom : List Bookmark -> Tags
 tagsFrom bookmarks =
     List.foldl
-        (\b s -> Tags.merge s (tagsSetFromBookmark b))
+        (\b s -> Tags.merge s b.tags)
         Tags.empty
         bookmarks
-
-
-tagsSetFromBookmark : Bookmark -> Tags
-tagsSetFromBookmark b =
-    List.foldl (\t s -> Tags.add t s) Tags.empty b.tags
 
 
 type alias BookmarkOptions msg =
@@ -126,8 +117,8 @@ viewBookmark filter options bookmark =
             ]
         , div [ class "bookmark-separator" ] []
         , div [ class "bookmark-footer" ] <|
-            if (Maybe.withDefault Tags.untagged <| List.head bookmark.tags) == Tags.untagged then
+            if Tags.untagged == bookmark.tags then
                 [ info "No tags" ]
             else
-                List.map (viewTag filter options.onTagSelect) bookmark.tags
+                Tags.viewTags filter options.onTagSelect bookmark.tags
         ]

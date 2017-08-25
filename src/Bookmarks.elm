@@ -97,7 +97,7 @@ type alias BookmarkOptions msg =
 
 viewBookmark : Filter -> BookmarkOptions msg -> Bookmark -> Html msg
 viewBookmark filter options bookmark =
-    div [ class "bookmark" ]
+    div [ class "bookmark" ] <|
         [ div [ class "bookmark-header" ]
             [ a
                 [ href bookmark.href
@@ -113,16 +113,17 @@ viewBookmark filter options bookmark =
                 ]
             ]
         , div [ class "bookmark-separator" ] []
-        , div [ class "bookmark-description" ]
-            [ if String.isEmpty bookmark.extended then
-                info "No description"
-              else
-                text bookmark.extended
-            ]
-        , div [ class "bookmark-separator" ] []
-        , div [ class "bookmark-footer" ] <|
-            if Tags.untagged == bookmark.tags then
-                [ info "No tags" ]
-            else
-                Tags.viewTags filter options.onTagSelect bookmark.tags
         ]
+            ++ (if String.isEmpty bookmark.extended then
+                    []
+                else
+                    [ div [ class "bookmark-description" ] [ text bookmark.extended ]
+                    , div [ class "bookmark-separator" ] []
+                    ]
+               )
+            ++ [ div [ class "bookmark-footer" ] <|
+                    if Tags.untagged == bookmark.tags then
+                        [ info "No tags" ]
+                    else
+                        Tags.viewTags filter options.onTagSelect bookmark.tags
+               ]

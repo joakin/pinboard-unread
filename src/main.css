@@ -1,3 +1,6 @@
+body {
+  background-color: #F5F5F5;
+}
 body, input, textarea, td {
   font-family: sans-serif;
   font-size: 18px;
@@ -29,15 +32,54 @@ a {
 
 .hidden { display: none !important; }
 
-.app {
+.app {}
+.app-header {
+  background-color: #ff3142;
+  padding: 0.5rem 1rem;
+  color: white;
+  display: flex;
+  min-height: 2rem;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.2)
+}
+.app-header-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: normal;
+  text-shadow: 0px 1px 2px rgba(33, 48, 60, 0.71)
+}
+.app-header-pin {
+  background: white;
+  border-radius: 100%;
+  display: inline-block;
+  margin-left: 0.5rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  line-height: 1.8rem;
+  text-align: center;
+  text-shadow: none;
+  font-size: 1rem;
+  box-shadow: 0px 1px 2px rgba(33, 48, 60, 0.31);
+  vertical-align: text-bottom;
+}
+
+.app-header-content,
+.app-body {
   max-width: 80ex;
-  padding: 0em 1em 4em;
   margin: auto;
 }
 
+.app-body {
+  padding: 0em 1rem 4rem;
+}
+
+
 .bookmark {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-bottom: 1rem;
+  margin-bottom: 0.3rem;
+  background-color: white;
+  border-radius: 3px;
 }
 .bookmark-header {
   display: flex;
@@ -52,7 +94,7 @@ a {
   font-size: 1.1em;
 }
 .bookmark-actions { margin-right: 0.5em; }
-.bookmark-actions>* { margin-left: 0.5em; }
+.bookmark-actions>* { margin-left: 0.5rem; }
 .bookmark-separator {
   display: block;
   border-top: 1px solid rgba(0,0,0,0.05);
@@ -61,13 +103,12 @@ a {
 }
 .bookmark-header-link, .bookmark-description, .bookmark-footer {
   display: block;
-  padding: 0.5rem 1rem;
-  min-height: 1em;
+  padding: 0.6rem 1rem;
+  min-height: 0.6em;
 }
 .bookmark-description, .bookmark-footer {}
 .bookmark-footer>.tag {
-  margin-right: 1em;
-  margin-bottom: 0.5em;
+  margin-right: 0.5rem;
 }
 
 .info {
@@ -78,11 +119,12 @@ a {
 .tag {
   display: inline-block;
   background-color: #fff9d2;
-  padding: 0.3em 0.6em;
-  border-radius: 3px;
+  padding: 0.4em 0.8em;
+  border-radius: 1em;
   color: rgba(0,0,0,0.6);
   cursor: pointer;
   font-size: 0.7em;
+  box-shadow: inset 0 0 1px rgba(200,100,0,0.5);
 }
 .tag.selected {
   background-color: #adfbc3;
@@ -99,8 +141,8 @@ a {
   margin-bottom: 1rem;
 }
 .unread-tags>.tag {
-  margin-right: 0.5em;
-  margin-bottom: 0.5em;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .stats {
@@ -110,8 +152,8 @@ a {
   justify-content: space-between;
   align-items: baseline;
 }
-.stats>:first-child>* { margin-right: 1em; }
-.stats>:last-child>* { margin-left: 1em; }
+.stats>:first-child>* { margin-right: 0.5rem; }
+.stats>:last-child>* { margin-left: 0.5rem; }
 
 .token-form {
   text-align: center;
@@ -145,12 +187,12 @@ a {
 }
 
 .menu-bar {
-  margin-bottom: 1em;
+  margin-bottom: 1rem;
   font-size: 0.8em;
   text-align: right;
 }
 .menu-bar>* {
-  margin-left: 1em;
+  margin-left: 1rem;
   white-space: nowrap;
 }
 

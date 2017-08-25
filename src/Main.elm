@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (Html, div, header, h1, text)
+import Html exposing (Html, div, header, h1, text, section, span)
 import Html.Attributes exposing (class)
 import Ports
 import Types
@@ -94,15 +94,22 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div [ class "app" ]
-        [ header []
-            [ h1 [] [ text "Pinboard unread 📌" ]
+        [ header [ class "app-header" ]
+            [ div [ class "app-header-content" ]
+                [ h1 [ class "app-header-title" ]
+                    [ text "Pinboard unread "
+                    , span [ class "app-header-pin" ] [ text "📌" ]
+                    ]
+                ]
             ]
-        , case model of
-            LoginPage data ->
-                Html.map LoginMsg <| Login.viewLogin data
+        , section [ class "app-body" ]
+            [ case model of
+                LoginPage data ->
+                    Html.map LoginMsg <| Login.viewLogin data
 
-            UnreadPage data ->
-                Html.map UnreadMsg <| Unread.viewBookmarks data
+                UnreadPage data ->
+                    Html.map UnreadMsg <| Unread.viewBookmarks data
+            ]
         ]
 
 

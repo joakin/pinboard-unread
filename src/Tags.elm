@@ -5,13 +5,35 @@ import Html exposing (Html)
 import Views exposing (tag)
 
 
-type alias Tags =
-    Set String
-
-
 type Filter
     = Unfiltered
     | Tags Tags
+
+
+updateFilter : String -> Filter -> Filter
+updateFilter tag filter =
+    case filter of
+        Unfiltered ->
+            Tags (add tag empty)
+
+        Tags tags ->
+            case isMember tag tags of
+                True ->
+                    let
+                        newTags =
+                            remove tag tags
+                    in
+                        if isEmpty newTags then
+                            Unfiltered
+                        else
+                            Tags newTags
+
+                False ->
+                    Tags (add tag tags)
+
+
+type alias Tags =
+    Set String
 
 
 untagged : String

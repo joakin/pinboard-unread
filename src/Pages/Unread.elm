@@ -239,7 +239,8 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
             ]
                 ++ (case unread of
                         Just unreadBookmarks ->
-                            [ section [ class "unread-tags" ] <| Tags.viewTags filter TagSelected tags
+                            [ section [ class "unread-tags" ] <|
+                                Tags.viewTags filter TagSelected tags
                             , section [ class "stats" ]
                                 [ span [ title "Last update date from pinboard.in" ]
                                     [ viewRefresh status

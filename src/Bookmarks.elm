@@ -121,9 +121,10 @@ viewBookmark filter options bookmark =
                     , div [ class "bookmark-separator" ] []
                     ]
                )
-            ++ [ div [ class "bookmark-footer" ] <|
-                    if Tags.untagged == bookmark.tags then
-                        [ info "No tags" ]
-                    else
+            ++ (if Tags.untagged == bookmark.tags then
+                    []
+                else
+                    [ div [ class "bookmark-footer" ] <|
                         Tags.viewTags filter options.onTagSelect bookmark.tags
-               ]
+                    ]
+               )

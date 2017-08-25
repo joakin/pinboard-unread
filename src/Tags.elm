@@ -95,8 +95,11 @@ toList =
 
 toString : Tags -> String
 toString tags =
-    toList tags
-        |> String.join " "
+    if tags == untagged then
+        ""
+    else
+        toList tags
+            |> String.join " "
 
 
 viewTags : Filter -> (String -> msg) -> Tags -> List (Html msg)

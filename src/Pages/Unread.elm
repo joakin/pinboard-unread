@@ -193,7 +193,18 @@ update msg data =
             -- It doesn't matter if the API responded OK or not. If it was OK,
             -- then it removed it, if it was not, then the URL didn't exist on
             -- the bookmarks, so we remove it anyways from the model.
-            removeBookmark url data => Idle
+            -- We also save the removed bookmark to storage
+            let
+                newData =
+                    removeBookmark url data
+            in
+                newData
+                    => Cmd
+                        (save
+                            newData.token.value
+                            newData.lastUpdateTime
+                            (Maybe.withDefault [] newData.unread)
+                        )
 
         DeleteBookmarkResponse url (Err err) ->
             -- If the request failed don't do anything for now

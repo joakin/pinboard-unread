@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Html exposing (Html, div, header, h1, text)
 import Html.Attributes exposing (class)
-import Ports exposing (save, logOut)
+import Ports
 import Types exposing (DataJSON)
 import Pages.Login as Login
 import Pages.Unread as Unread
@@ -18,8 +18,8 @@ type alias Model =
 
 
 type Page
-    = NoAuth Login.Data
-    | Auth Unread.Data
+    = LoginPage Login.Data
+    | UnreadPage Unread.Data
 
 
 type alias Flags =
@@ -31,11 +31,11 @@ init { data } =
     case data of
         Just d ->
             Unread.initWithJSONAndFetch d
-                |> T.mapFirst Auth
+                |> T.mapFirst UnreadPage
                 |> T.mapSecond (Cmd.map UnreadMsg)
 
         Nothing ->
-            NoAuth Login.initEmpty => Cmd.none
+            LoginPage Login.initEmpty => Cmd.none
 
 
 
@@ -50,34 +50,34 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
-        ( LoginMsg msg, NoAuth data ) ->
+        ( LoginMsg msg, LoginPage data ) ->
             case Login.update msg data of
                 ( data, Login.Idle ) ->
-                    NoAuth data => Cmd.none
+                    LoginPage data => Cmd.none
 
                 ( data, Login.Cmd cmd ) ->
-                    NoAuth data => (Cmd.map LoginMsg cmd)
+                    LoginPage data => (Cmd.map LoginMsg cmd)
 
                 ( _, Login.Success token updateTime bookmarks ) ->
-                    Auth
-                        (Unread.initWithDecodedBookmarks
-                            { token = token
-                            , lastUpdateTime = updateTime
-                            , unread = Just bookmarks
-                            }
-                        )
-                        => save ( token, updateTime, bookmarks )
+                    (Unread.initWithDecodedBookmarksAndSave
+                        { token = token
+                        , lastUpdateTime = updateTime
+                        , unread = Just bookmarks
+                        }
+                    )
+                        |> T.mapFirst UnreadPage
+                        |> T.mapSecond (Cmd.map UnreadMsg)
 
-        ( UnreadMsg msg, Auth data ) ->
+        ( UnreadMsg msg, UnreadPage data ) ->
             case Unread.update msg data of
                 ( data, Unread.Idle ) ->
-                    Auth data => Cmd.none
+                    UnreadPage data => Cmd.none
 
                 ( data, Unread.Cmd cmd ) ->
-                    Auth data => Cmd.map UnreadMsg cmd
+                    UnreadPage data => Cmd.map UnreadMsg cmd
 
                 ( _, Unread.LogOut ) ->
-                    NoAuth Login.initEmpty => logOut ()
+                    LoginPage Login.initEmpty => Ports.logOut ()
 
         ( action, _ ) ->
             let
@@ -98,10 +98,10 @@ view model =
             [ h1 [] [ text "Pinboard unread 📌" ]
             ]
         , case model of
-            NoAuth data ->
+            LoginPage data ->
                 Html.map LoginMsg <| Login.viewLogin data
 
-            Auth data ->
+            UnreadPage data ->
                 Html.map UnreadMsg <| Unread.viewBookmarks data
         ]
 

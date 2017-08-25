@@ -3,7 +3,7 @@ module Pages.Unread
         ( Data
         , Msg
         , Response(..)
-        , initWithDecodedBookmarks
+        , initWithDecodedBookmarksAndSave
         , initWithJSONAndFetch
         , viewBookmarks
         , update
@@ -22,7 +22,7 @@ import Net exposing (httpErrorToString)
 import Views exposing (info, loadingIcon, okBtn, notOkBtn)
 import DateUtils exposing (formatDate)
 import Util exposing ((=>))
-import Ports exposing (save)
+import Ports
 import Tuple2 as T
 import Json.Decode as D
 
@@ -38,15 +38,17 @@ type alias Data =
     }
 
 
-initWithDecodedBookmarks : { token : String, lastUpdateTime : String, unread : Maybe (List BookmarkJSON) } -> Data
-initWithDecodedBookmarks { token, unread, lastUpdateTime } =
+initWithDecodedBookmarksAndSave : { token : String, lastUpdateTime : String, unread : Maybe (List BookmarkJSON) } -> ( Data, Cmd Msg )
+initWithDecodedBookmarksAndSave { token, unread, lastUpdateTime } =
     dataWithTokenAndLastUpdate token lastUpdateTime
-        |> (case unread of
-                Just unreadBookmarks ->
-                    dataWithBookmarksJSON unreadBookmarks
+        |> (\data ->
+                case unread of
+                    Just unreadBookmarks ->
+                        dataWithBookmarksJSON unreadBookmarks data
+                            => save token lastUpdateTime unreadBookmarks
 
-                Nothing ->
-                    identity
+                    Nothing ->
+                        data => Cmd.none
            )
 
 
@@ -135,6 +137,15 @@ removeBookmark url data =
             data
 
 
+save : String -> String -> List BookmarkJSON -> Cmd Msg
+save token updateTime bookmarks =
+    Ports.save
+        ( token
+        , updateTime
+        , (Bookmarks.encodeBookmarkJSONList bookmarks)
+        )
+
+
 type Msg
     = TagSelected String
     | FetchBookmarks
@@ -159,7 +170,7 @@ update msg data =
                     | lastUpdateTime = updateTime
                     , status = Initial
                 }
-                => Cmd (save ( data.token.value, updateTime, bookmarks ))
+                => Cmd (save data.token.value updateTime bookmarks)
 
         UnreadBookmarksResponse (Err err) ->
             { data | status = Error err } => Idle

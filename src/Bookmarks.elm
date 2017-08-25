@@ -1,10 +1,12 @@
 module Bookmarks exposing (..)
 
 import Json.Decode as D
+import Json.Encode as E
 import Tags exposing (Tags, Filter(..))
 import Html exposing (Html, div, a, text)
 import Html.Attributes exposing (class, href, target, title)
 import Views exposing (info, deleteBtn)
+import Util exposing ((=>))
 
 
 type alias Bookmark =
@@ -25,7 +27,7 @@ type alias BookmarkJSON =
     , hash : String
     , href : String
     , shared : Bool
-    , tags : String
+    , tags : Tags
     , time : String
     , toread : Bool
     }
@@ -44,9 +46,28 @@ decodeBookmarkJSON =
         (D.field "hash" (D.string))
         (D.field "href" (D.string))
         (D.field "shared" (D.map yesToBool (D.string)))
-        (D.field "tags" (D.string))
+        (D.field "tags" (D.map Tags.fromString (D.string)))
         (D.field "time" (D.string))
         (D.field "toread" (D.map yesToBool (D.string)))
+
+
+encodeBookmarkJSONList : List BookmarkJSON -> E.Value
+encodeBookmarkJSONList list =
+    E.list (List.map encodeBookmarkJSON list)
+
+
+encodeBookmarkJSON : BookmarkJSON -> E.Value
+encodeBookmarkJSON b =
+    E.object
+        [ "description" => E.string b.description
+        , "extended" => E.string b.extended
+        , "hash" => E.string b.hash
+        , "href" => E.string b.href
+        , "shared" => E.string (boolToYes b.shared)
+        , "tags" => E.string (Tags.toString b.tags)
+        , "time" => E.string b.time
+        , "toread" => E.string (boolToYes b.toread)
+        ]
 
 
 fromJSON : BookmarkJSON -> Bookmark
@@ -56,7 +77,7 @@ fromJSON bj =
     , hash = bj.hash
     , href = bj.href
     , shared = bj.shared
-    , tags = Tags.fromString bj.tags
+    , tags = bj.tags
     , time = bj.time
     , toread = bj.toread
     }
@@ -65,6 +86,14 @@ fromJSON bj =
 yesToBool : String -> Bool
 yesToBool yes =
     yes == "yes"
+
+
+boolToYes : Bool -> String
+boolToYes b =
+    if b then
+        "yes"
+    else
+        "no"
 
 
 filter : Filter -> Bookmark -> Bool

@@ -93,6 +93,12 @@ toList =
     Set.toList
 
 
+toString : Tags -> String
+toString tags =
+    toList tags
+        |> String.join " "
+
+
 viewTags : Filter -> (String -> msg) -> Tags -> List (Html msg)
 viewTags filter onTagClick tags =
     let

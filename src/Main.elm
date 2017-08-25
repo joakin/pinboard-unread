@@ -60,7 +60,7 @@ update msg model =
 
                 ( _, Login.Success token updateTime bookmarks ) ->
                     Auth
-                        (Unread.initWithJSON
+                        (Unread.initWithDecodedBookmarks
                             { token = token
                             , lastUpdateTime = updateTime
                             , unread = Just bookmarks

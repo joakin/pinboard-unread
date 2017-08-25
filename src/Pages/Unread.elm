@@ -3,7 +3,7 @@ module Pages.Unread
         ( Data
         , Msg
         , Response(..)
-        , initWithJSON
+        , initWithDecodedBookmarks
         , initWithJSONAndFetch
         , viewBookmarks
         , update
@@ -24,6 +24,7 @@ import DateUtils exposing (formatDate)
 import Util exposing ((=>))
 import Ports exposing (save)
 import Tuple2 as T
+import Json.Decode as D
 
 
 type alias Data =
@@ -37,26 +38,42 @@ type alias Data =
     }
 
 
-initWithJSON : DataJSON -> Data
-initWithJSON { token, unread, lastUpdateTime } =
+initWithDecodedBookmarks : { token : String, lastUpdateTime : String, unread : Maybe (List BookmarkJSON) } -> Data
+initWithDecodedBookmarks { token, unread, lastUpdateTime } =
+    dataWithTokenAndLastUpdate token lastUpdateTime
+        |> (case unread of
+                Just unreadBookmarks ->
+                    dataWithBookmarksJSON unreadBookmarks
+
+                Nothing ->
+                    identity
+           )
+
+
+initWithJSONAndFetch : DataJSON -> ( Data, Cmd Msg )
+initWithJSONAndFetch { token, unread, lastUpdateTime } =
     let
         processData : Data -> Data
         processData =
             case unread of
-                Just unreadBookmarks ->
-                    dataWithBookmarksJSON unreadBookmarks
+                Just jsonValue ->
+                    case D.decodeValue Bookmarks.decodeBookmarkJSONList jsonValue of
+                        Ok unreadBookmarks ->
+                            dataWithBookmarksJSON unreadBookmarks
+
+                        Err err ->
+                            let
+                                _ =
+                                    Debug.log "Decoding bookmarks failed" err
+                            in
+                                identity
 
                 Nothing ->
                     identity
     in
         dataWithTokenAndLastUpdate token lastUpdateTime
             |> processData
-
-
-initWithJSONAndFetch : DataJSON -> ( Data, Cmd Msg )
-initWithJSONAndFetch data =
-    initWithJSON data
-        |> updateUnreadBookmarks
+            |> updateUnreadBookmarks
 
 
 dataWithBookmarksJSON : List BookmarkJSON -> Data -> Data

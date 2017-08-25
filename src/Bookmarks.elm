@@ -4,16 +4,17 @@ import Json.Decode as D
 import Tags exposing (Tags, Filter(..), viewTag)
 import Html exposing (Html, div, a, text)
 import Html.Attributes exposing (class, href, target, title)
-import Html.Events exposing (onClick)
-import Util exposing ((=>))
 import Views exposing (info, deleteBtn)
 
 
 type alias Bookmark =
     { description : String
     , extended : String
+    , hash : String
     , href : String
+    , shared : Bool
     , tags : List String
+    , time : String
     , toread : Bool
     }
 
@@ -23,10 +24,10 @@ type alias BookmarkJSON =
     , extended : String
     , hash : String
     , href : String
-    , shared : String
+    , shared : Bool
     , tags : String
     , time : String
-    , toread : String
+    , toread : Bool
     }
 
 
@@ -42,24 +43,32 @@ decodeBookmarkJSON =
         (D.field "extended" (D.string))
         (D.field "hash" (D.string))
         (D.field "href" (D.string))
-        (D.field "shared" (D.string))
+        (D.field "shared" (D.map yesToBool (D.string)))
         (D.field "tags" (D.string))
         (D.field "time" (D.string))
-        (D.field "toread" (D.string))
+        (D.field "toread" (D.map yesToBool (D.string)))
 
 
 fromJSON : BookmarkJSON -> Bookmark
 fromJSON bj =
     { description = bj.description
     , extended = bj.extended
+    , hash = bj.hash
     , href = bj.href
+    , shared = bj.shared
     , tags =
         if String.isEmpty bj.tags then
             [ Tags.untagged ]
         else
             String.words bj.tags
-    , toread = bj.toread == "yes"
+    , time = bj.time
+    , toread = bj.toread
     }
+
+
+yesToBool : String -> Bool
+yesToBool yes =
+    yes == "yes"
 
 
 filter : Filter -> Bookmark -> Bool

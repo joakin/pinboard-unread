@@ -5,7 +5,7 @@ module Types
         , DataJSON
         )
 
-import Bookmarks exposing (BookmarkJSON)
+import Json.Decode
 
 
 type Status e
@@ -19,7 +19,7 @@ type alias Token =
 
 
 type alias DataJSON =
-    { unread : Maybe (List BookmarkJSON)
+    { unread : Maybe Json.Decode.Value
     , token : String
     , lastUpdateTime : String
     }

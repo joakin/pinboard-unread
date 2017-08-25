@@ -77,7 +77,7 @@ a {
 
 .bookmark {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  margin-bottom: 0.3rem;
+  margin: 0 -0.5rem 0.3rem;
   background-color: white;
   border-radius: 3px;
 }

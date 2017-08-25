@@ -91,7 +91,6 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 1.1em;
 }
 .bookmark-actions { margin-right: 0.5em; }
 .bookmark-actions>* { margin-left: 0.5rem; }

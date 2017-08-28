@@ -10,8 +10,10 @@ const app = Main.embed(document.getElementById("root"), {
 app.ports.ready.subscribe(_ => {
   const loadingOverlay = document.querySelector('.loading-overlay')
   requestAnimationFrame(_ => {
-    loadingOverlay.classList.add('animated', 'fadeOut');
-    setTimeout(_ => loadingOverlay.remove(), 1000);
+    if (loadingOverlay) { // When hot reloading the div would've already been removed
+      loadingOverlay.classList.add('animated', 'fadeOut');
+      setTimeout(_ => loadingOverlay.remove(), 1000);
+    }
   })
 });
 

@@ -1,26 +1,34 @@
 body {
-  background-color: #F5F5F5;
+  background-color: #f5f5f5;
 }
-body, input, textarea, td {
-  font-family: Roboto, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+body,
+input,
+textarea,
+td {
+  font-family: Roboto, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans',
+    'Helvetica Neue', sans-serif;
   font-size: 18px;
   margin: 0;
   color: #293c4b;
 }
 
-input, textarea {
-  border: 1px solid rgba(0,50,150,.1);
+input,
+textarea {
+  border: 1px solid rgba(0, 50, 150, .1);
   background-color: white;
   border-radius: 3px;
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2),
+    0 1px 5px 0 rgba(0, 0, 0, .12);
 }
-input[type=submit], button {
-  border: 1px solid rgba(0,0,150,.1);
-  background-color: rgb(33,150,243);
+input[type=submit],
+button {
+  border: 1px solid rgba(0, 0, 150, .1);
+  background-color: rgb(33, 150, 243);
   color: white;
   text-transform: uppercase;
   border-radius: 3px;
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.2), 0 1px 5px 0 rgba(0,0,0,.12);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .14), 0 3px 1px -2px rgba(0, 0, 0, .2),
+    0 1px 5px 0 rgba(0, 0, 0, .12);
   cursor: pointer;
 }
 
@@ -30,9 +38,12 @@ a {
   cursor: pointer;
 }
 
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
-.app {}
+.app {
+}
 .app-header {
   background-color: #ff3142;
   padding: 0.5rem 1rem;
@@ -41,7 +52,7 @@ a {
   min-height: 2.5rem;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   position: relative;
 }
@@ -49,7 +60,7 @@ a {
   margin: 0;
   font-size: 1.3rem;
   font-weight: normal;
-  text-shadow: 0px 1px 2px rgba(33, 48, 60, 0.71)
+  text-shadow: 0px 1px 2px rgba(33, 48, 60, 0.71);
 }
 .app-header-pin {
   background: white;
@@ -82,7 +93,7 @@ a {
 }
 
 .bookmark {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   margin: 0 -0.5rem 0.5rem;
   background-color: white;
   border-radius: 3px;
@@ -101,29 +112,35 @@ a {
 .bookmark-header-actions {
   padding: 0 1rem;
 }
-.bookmark-actions { 
+.bookmark-actions {
   display: flex;
   justify-content: space-around;
   align-items: center;
   background-color: #e6e6e6;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   padding: 0.1rem 0;
   filter: grayscale();
 }
-.bookmark-actions>* { margin-left: 0.5rem; }
+.bookmark-actions > * {
+  margin-left: 0.5rem;
+}
 .bookmark-separator {
   display: block;
-  border-top: 1px solid rgba(0,0,0,0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
   width: 100%;
   height: 0px;
 }
-.bookmark-header-link, .bookmark-description, .bookmark-footer {
+.bookmark-header-link,
+.bookmark-description,
+.bookmark-footer {
   display: block;
   padding: 0.6rem 1rem;
   min-height: 0.6em;
 }
-.bookmark-description, .bookmark-footer {}
-.bookmark-footer>.tag {
+.bookmark-description,
+.bookmark-footer {
+}
+.bookmark-footer > .tag {
   margin-right: 0.5rem;
 }
 
@@ -137,17 +154,18 @@ a {
   background-color: #fff9d2;
   padding: 0.4em 0.8em;
   border-radius: 1em;
-  color: rgba(0,0,0,0.6);
+  color: rgba(0, 0, 0, 0.6);
   cursor: pointer;
   font-size: 0.7em;
-  box-shadow: inset 0 0 1px rgba(200,100,0,0.5);
+  box-shadow: inset 0 0 1px rgba(200, 100, 0, 0.5);
 }
 .tag.selected {
   background-color: #adfbc3;
-  color: rgba(0,0,0,0.8);
+  color: rgba(0, 0, 0, 0.8);
   text-shadow: 0px 1px rgba(255, 255, 255, 0.7);
-  box-shadow: 0 2px 2px rgba(0, 127, 86, 0.25), inset 0 -1px 2px rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(0,127,64,0.1);
+  box-shadow: 0 2px 2px rgba(0, 127, 86, 0.25),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 127, 64, 0.1);
   border-width: 0 1px 1px 1px;
   position: relative;
   top: -2px;
@@ -156,7 +174,7 @@ a {
 .unread-tags {
   margin-bottom: 1rem;
 }
-.unread-tags>.tag {
+.unread-tags > .tag {
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
 }
@@ -168,8 +186,12 @@ a {
   justify-content: space-between;
   align-items: baseline;
 }
-.stats>:first-child>* { margin-right: 0.5rem; }
-.stats>:last-child>* { margin-left: 0.5rem; }
+.stats > :first-child > * {
+  margin-right: 0.5rem;
+}
+.stats > :last-child > * {
+  margin-left: 0.5rem;
+}
 
 .token-form {
   text-align: center;
@@ -177,7 +199,8 @@ a {
   position: relative;
   padding: 1em;
 }
-.token-form-input, .token-form-submit {
+.token-form-input,
+.token-form-submit {
   padding: 0.5em 1em;
   display: inline-block;
 }
@@ -186,8 +209,12 @@ a {
   min-width: 0;
 }
 .token-form-loading {
-  position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-  background-color: rgba(255,255,255,0.8);
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -199,7 +226,7 @@ a {
   background-color: #fff1bc;
   border-radius: 3px;
   font-size: 0.8em;
-  color: rgba(0,0,0,0.6);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .menu-bar {
@@ -212,17 +239,20 @@ a {
   justify-content: space-between;
   align-items: center;
 }
-.menu-bar>:first-child>* { margin-right: 0.5rem; }
-.menu-bar>:last-child>* { margin-left: 0.5rem; }
+.menu-bar > :first-child > * {
+  margin-right: 0.5rem;
+}
+.menu-bar > :last-child > * {
+  margin-left: 0.5rem;
+}
 
-.unread-page-header {}
-
+.unread-page-header {
+}
 
 .emoji-icon {
   display: inline-block;
   padding: 0 0.3em;
 }
-
 
 .user-badge {
   display: inline-block;
@@ -236,13 +266,15 @@ a {
 .user-badge-icon {
   display: inline-block;
   padding: 0 0.7rem 0 0;
- }
-.user-badge>* { display: inline-block; }
-.user-badge>:first-child {
+}
+.user-badge > * {
+  display: inline-block;
+}
+.user-badge > :first-child {
   padding: 0 0.8rem 0 0.6rem;
   background-color: white;
   border-radius: 10rem;
 }
-.user-badge>:last-child {
+.user-badge > :last-child {
   padding: 0 0.6rem 0 0.3rem;
 }

@@ -1,7 +1,7 @@
 module Views exposing (..)
 
 import Html exposing (Html, a, span, text)
-import Html.Attributes exposing (class, classList, title)
+import Html.Attributes exposing (class, style, classList, title)
 import Html.Events exposing (onClick)
 import Util exposing ((=>))
 
@@ -58,11 +58,16 @@ notOkBtn title_ =
 
 rightChevronBtn : Bool -> msg -> Html msg
 rightChevronBtn expanded msg =
-    a [ onClick msg ]
-        [ text
-            (if expanded then
-                "🔽"
-             else
-                "◀️"
-            )
+    a
+        [ class "emoji-icon chevron"
+        , style
+            [ "transform"
+                => (if expanded then
+                        "rotate(-90deg)"
+                    else
+                        "rotate(0deg)"
+                   )
+            ]
+        , onClick msg
         ]
+        [ text "◀️" ]

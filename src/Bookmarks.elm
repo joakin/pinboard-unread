@@ -115,8 +115,19 @@ viewBookmark filter options bookmark =
             , div [ class "bookmark-header-actions" ]
                 [ rightChevronBtn options.actionsExpanded (options.onExpandActions bookmark.href) ]
             ]
-        , div [ class "bookmark-separator", classList [ ( "hidden", not options.actionsExpanded ) ] ] []
-        , div [ class "bookmark-actions", classList [ ( "hidden", not options.actionsExpanded ) ] ]
+        , div
+            [ class "bookmark-separator"
+            , classList
+                [ ( "hidden", not options.actionsExpanded )
+                ]
+            ]
+            []
+        , div
+            [ class "bookmark-actions"
+            , classList
+                [ ( "hidden", not options.actionsExpanded )
+                ]
+            ]
             [ markReadBtn (options.onMarkRead bookmark.href)
             , editBtn (options.onEdit bookmark.href)
             , deleteBtn (options.onDelete bookmark.href)

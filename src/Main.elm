@@ -97,8 +97,8 @@ view model =
         [ header [ class "app-header" ]
             [ div [ class "app-header-content" ]
                 [ h1 [ class "app-header-title" ]
-                    [ text "Pinboard unread "
-                    , span [ class "app-header-pin" ] [ text "📌" ]
+                    [ span [ class "app-header-pin" ] [ text "📌" ]
+                    , text "Pinboard unread"
                     ]
                 ]
             ]

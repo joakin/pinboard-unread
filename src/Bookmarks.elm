@@ -4,8 +4,8 @@ import Json.Decode as D
 import Json.Encode as E
 import Tags exposing (Tags, Filter(..))
 import Html exposing (Html, div, a, text)
-import Html.Attributes exposing (class, href, target, title)
-import Views exposing (info, deleteBtn)
+import Html.Attributes exposing (class, classList, href, target, title)
+import Views exposing (info, editBtn, markReadBtn, deleteBtn, rightChevronBtn)
 import Util exposing ((=>))
 
 
@@ -90,8 +90,12 @@ tagsFrom bookmarks =
 
 
 type alias BookmarkOptions msg =
-    { onDelete : String -> msg
+    { actionsExpanded : Bool
+    , onMarkRead : String -> msg
+    , onEdit : String -> msg
+    , onDelete : String -> msg
     , onTagSelect : String -> msg
+    , onExpandActions : String -> msg
     }
 
 
@@ -108,23 +112,28 @@ viewBookmark filter options bookmark =
                 [ text
                     bookmark.description
                 ]
-            , div [ class "bookmark-actions" ]
-                [ deleteBtn (options.onDelete bookmark.href)
-                ]
+            , div [ class "bookmark-header-actions" ]
+                [ rightChevronBtn options.actionsExpanded (options.onExpandActions bookmark.href) ]
             ]
-        , div [ class "bookmark-separator" ] []
+        , div [ class "bookmark-separator", classList [ ( "hidden", not options.actionsExpanded ) ] ] []
+        , div [ class "bookmark-actions", classList [ ( "hidden", not options.actionsExpanded ) ] ]
+            [ markReadBtn (options.onMarkRead bookmark.href)
+            , editBtn (options.onEdit bookmark.href)
+            , deleteBtn (options.onDelete bookmark.href)
+            ]
         ]
             ++ (if String.isEmpty bookmark.extended then
                     []
                 else
-                    [ div [ class "bookmark-description" ] [ text bookmark.extended ]
-                    , div [ class "bookmark-separator" ] []
+                    [ div [ class "bookmark-separator" ] []
+                    , div [ class "bookmark-description" ] [ text bookmark.extended ]
                     ]
                )
             ++ (if Tags.untagged == bookmark.tags then
                     []
                 else
-                    [ div [ class "bookmark-footer" ] <|
+                    [ div [ class "bookmark-separator" ] []
+                    , div [ class "bookmark-footer" ] <|
                         Tags.viewTags filter options.onTagSelect bookmark.tags
                     ]
                )

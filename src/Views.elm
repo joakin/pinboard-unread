@@ -33,7 +33,17 @@ loadingIcon _ =
 
 deleteBtn : msg -> Html msg
 deleteBtn msg =
-    a [ class "emoji-icon", onClick msg ] [ text "✖️" ]
+    a [ class "emoji-icon", onClick msg, title "Delete" ] [ text "✖️" ]
+
+
+markReadBtn : msg -> Html msg
+markReadBtn msg =
+    a [ class "emoji-icon", onClick msg, title "Mark as read" ] [ text "️👁" ]
+
+
+editBtn : msg -> Html msg
+editBtn msg =
+    a [ class "emoji-icon", onClick msg, title "Edit" ] [ text "✏️" ]
 
 
 okBtn : msg -> Html msg
@@ -44,3 +54,15 @@ okBtn click =
 notOkBtn : String -> Html msg
 notOkBtn title_ =
     a [ class "emoji-icon", title title_ ] [ text "❌" ]
+
+
+rightChevronBtn : Bool -> msg -> Html msg
+rightChevronBtn expanded msg =
+    a [ onClick msg ]
+        [ text
+            (if expanded then
+                "🔽"
+             else
+                "◀️"
+            )
+        ]

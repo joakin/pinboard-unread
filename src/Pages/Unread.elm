@@ -25,10 +25,12 @@ import Util exposing ((=>))
 import Ports
 import Tuple2 as T
 import Json.Decode as D
+import Dict exposing (Dict)
 
 
 type alias Data =
-    { unread : Maybe (List Bookmark)
+    { options : Dict String BookmarkUIOptions
+    , unread : Maybe (List Bookmark)
     , tags : Tags
     , filter : Filter
     , token : Token
@@ -36,6 +38,14 @@ type alias Data =
     , lastUpdateTime : String
     , status : Status FetchBookmarksError
     }
+
+
+type alias BookmarkUIOptions =
+    { actionsExpanded : Bool }
+
+
+defaultOptions =
+    { actionsExpanded = False }
 
 
 initWithDecodedBookmarksAndSave : { token : String, lastUpdateTime : String, unread : Maybe (List Bookmark) } -> ( Data, Cmd Msg )
@@ -92,7 +102,8 @@ dataWithBookmarks bookmarks data =
 
 dataWithTokenAndLastUpdate : String -> String -> Data
 dataWithTokenAndLastUpdate token lastUpdateTime =
-    { unread = Nothing
+    { options = Dict.empty
+    , unread = Nothing
     , tags = Tags.empty
     , filter = Unfiltered
     , token = Token token
@@ -147,6 +158,9 @@ type Msg
     = TagSelected String
     | FetchBookmarks
     | UnreadBookmarksResponse (Result FetchBookmarksError ( String, List Bookmark ))
+    | ExpandActions String
+    | EditBookmark String
+    | MarkReadBookmark String
     | DeleteBookmark String
     | DeleteBookmarkResponse String (Result Http.Error (Result String ()))
     | SignOff
@@ -212,9 +226,27 @@ update msg data =
             -- Or toasts?
             data => Idle
 
+        EditBookmark url ->
+            data => Idle
+
+        MarkReadBookmark url ->
+            data => Idle
+
+        ExpandActions url ->
+            let
+                options =
+                    Dict.get url data.options |> Maybe.withDefault defaultOptions
+
+                newOptions =
+                    Dict.insert url
+                        { options | actionsExpanded = not options.actionsExpanded }
+                        data.options
+            in
+                { data | options = newOptions } => Idle
+
 
 viewBookmarks : Data -> Html Msg
-viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
+viewBookmarks { options, unread, tags, filter, user, lastUpdateTime, status } =
     let
         unreadBookmarks =
             Maybe.withDefault [] unread
@@ -259,10 +291,21 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
                                     ]
                                 , section [] <|
                                     List.map
-                                        (Bookmarks.viewBookmark filter
-                                            { onDelete = DeleteBookmark
-                                            , onTagSelect = TagSelected
-                                            }
+                                        (\b ->
+                                            let
+                                                bookmarkOptions =
+                                                    Dict.get b.href options
+                                                        |> Maybe.withDefault defaultOptions
+                                            in
+                                                Bookmarks.viewBookmark filter
+                                                    { actionsExpanded = bookmarkOptions.actionsExpanded
+                                                    , onExpandActions = ExpandActions
+                                                    , onMarkRead = MarkReadBookmark
+                                                    , onEdit = EditBookmark
+                                                    , onDelete = DeleteBookmark
+                                                    , onTagSelect = TagSelected
+                                                    }
+                                                    b
                                         )
                                         filteredUnread
                                 ]

@@ -28,7 +28,7 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Msg )
 init { data } =
-    case data of
+    (case data of
         Just d ->
             Unread.initWithFlagsAndFetch d
                 |> T.mapFirst UnreadPage
@@ -36,6 +36,8 @@ init { data } =
 
         Nothing ->
             LoginPage Login.initEmpty => Cmd.none
+    )
+        |> T.mapSecond (\cmds -> Cmd.batch [ cmds, Ports.ready () ])
 
 
 

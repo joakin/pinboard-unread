@@ -230,37 +230,47 @@ viewBookmarks { unread, tags, filter, user, lastUpdateTime, status } =
     in
         div [] <|
             [ header [ class "unread-page-header" ]
-                [ h2 [] [ text "Unread bookmarks" ]
-                , section [ class "menu-bar" ]
-                    [ span [] [ text <| "User: " ++ user ]
-                    , a [ onClick SignOff ] [ text "Log out" ]
+                [ section [ class "menu-bar content" ]
+                    [ span [ title "Last update date from pinboard.in" ]
+                        [ viewRefresh status
+                        , span [] [ text <| formatDate lastUpdateTime ]
+                        ]
+                    , div []
+                        [ div [ class "user-badge" ]
+                            [ span []
+                                [ span [ class "user-badge-icon" ] [ text "👤" ]
+                                , text user
+                                ]
+                            , a [ onClick SignOff, title "Log out" ] [ text "🔚" ]
+                            ]
+                        ]
                     ]
+                , h2 [ class "content" ] [ text "Unread bookmarks" ]
                 ]
             ]
-                ++ (case unread of
-                        Just unreadBookmarks ->
-                            [ section [ class "unread-tags" ] <|
-                                Tags.viewTags filter TagSelected tags
-                            , section [ class "stats" ]
-                                [ span [ title "Last update date from pinboard.in" ]
-                                    [ viewRefresh status
-                                    , span [] [ text <| formatDate lastUpdateTime ]
+                ++ [ div [ class "content" ]
+                        (case unread of
+                            Just unreadBookmarks ->
+                                [ section [ class "unread-tags" ] <|
+                                    Tags.viewTags filter TagSelected tags
+                                , section [ class "stats" ]
+                                    [ span [] []
+                                    , span [] [ text <| filteredTotal ++ " / " ++ total ]
                                     ]
-                                , span [] [ text <| filteredTotal ++ " / " ++ total ]
+                                , section [] <|
+                                    List.map
+                                        (Bookmarks.viewBookmark filter
+                                            { onDelete = DeleteBookmark
+                                            , onTagSelect = TagSelected
+                                            }
+                                        )
+                                        filteredUnread
                                 ]
-                            , section [] <|
-                                List.map
-                                    (Bookmarks.viewBookmark filter
-                                        { onDelete = DeleteBookmark
-                                        , onTagSelect = TagSelected
-                                        }
-                                    )
-                                    filteredUnread
-                            ]
 
-                        Nothing ->
-                            [ info "No bookmarks fetched yet." ]
-                   )
+                            Nothing ->
+                                [ info "No bookmarks fetched yet." ]
+                        )
+                   ]
 
 
 viewRefresh : Status FetchBookmarksError -> Html Msg

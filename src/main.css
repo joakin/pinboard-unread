@@ -41,7 +41,9 @@ a {
   min-height: 2.5rem;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.2)
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2), 0 1px 1px rgba(0,0,0,0.2);
+  z-index: 1000;
+  position: relative;
 }
 .app-header-title {
   margin: 0;
@@ -71,9 +73,13 @@ a {
 }
 
 .app-body {
-  padding: 0em 1rem 4rem;
+  padding: 0em 0em 4rem;
 }
 
+.content {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
 
 .bookmark {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
@@ -186,23 +192,46 @@ a {
 }
 
 .menu-bar {
-  margin-bottom: 1rem;
+  padding: 0.5rem;
   font-size: 0.8em;
   text-align: right;
-}
-.menu-bar>* {
-  margin-left: 1rem;
-  white-space: nowrap;
-}
-
-.unread-page-header {
+  background-color: white;
+  box-shadow: 0px 0px 1px rgba(33, 48, 60, 0.31);
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
 }
+.menu-bar>:first-child>* { margin-right: 0.5rem; }
+.menu-bar>:last-child>* { margin-left: 0.5rem; }
+
+.unread-page-header {}
 
 
 .emoji-icon {
   display: inline-block;
   padding: 0 0.3em;
+}
+
+
+.user-badge {
+  display: inline-block;
+  background-color: #ddd;
+  box-shadow: 0px 1px 1px rgba(33, 48, 60, 0.31);
+  border-radius: 2rem;
+  max-height: 1.8rem;
+  line-height: 1.8rem;
+  vertical-align: middle;
+}
+.user-badge-icon {
+  display: inline-block;
+  padding: 0 0.7rem 0 0;
+ }
+.user-badge>* { display: inline-block; }
+.user-badge>:first-child {
+  padding: 0 0.8rem 0 0.6rem;
+  background-color: white;
+  border-radius: 10rem;
+}
+.user-badge>:last-child {
+  padding: 0 0.6rem 0 0.3rem;
 }

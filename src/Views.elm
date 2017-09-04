@@ -1,6 +1,6 @@
 module Views exposing (..)
 
-import Html exposing (Html, a, span, text)
+import Html exposing (Html, a, span, text, i)
 import Html.Attributes exposing (class, style, classList, title)
 import Html.Events exposing (onClick)
 import Util exposing ((=>))
@@ -28,46 +28,51 @@ info txt =
 
 loadingIcon : () -> Html msg
 loadingIcon _ =
-    span [ class "emoji-icon animated infinite rotate" ] [ text "🌀" ]
+    iconClassed "animated infinite rotate" "loop"
 
 
 deleteBtn : msg -> Html msg
 deleteBtn msg =
-    a [ class "emoji-icon", onClick msg, title "Delete" ] [ text "✖️" ]
+    a [ onClick msg, title "Delete" ] [ icon "delete_forever" ]
 
 
 markReadBtn : msg -> Html msg
 markReadBtn msg =
-    a [ class "emoji-icon", onClick msg, title "Mark as read" ] [ text "️👁" ]
+    a [ onClick msg, title "Mark as read" ] [ icon "visibility_off" ]
 
 
 editBtn : msg -> Html msg
 editBtn msg =
-    a [ class "emoji-icon", onClick msg, title "Edit" ] [ text "✏️" ]
+    a [ onClick msg, title "Edit" ] [ icon "edit" ]
 
 
 okBtn : msg -> Html msg
 okBtn click =
-    a [ class "emoji-icon", onClick click ] [ text "✅" ]
+    a [ onClick click ] [ icon "done" ]
 
 
 notOkBtn : String -> Html msg
 notOkBtn title_ =
-    a [ class "emoji-icon", title title_ ] [ text "❌" ]
+    a [ title title_ ] [ icon "error" ]
 
 
 rightChevronBtn : Bool -> msg -> Html msg
 rightChevronBtn expanded msg =
     a
-        [ class "emoji-icon chevron"
-        , style
-            [ "transform"
-                => (if expanded then
-                        "rotate(-90deg)"
-                    else
-                        "rotate(0deg)"
-                   )
-            ]
-        , onClick msg
+        [ onClick msg ]
+        [ icon <|
+            if expanded then
+                "expand_less"
+            else
+                "expand_more"
         ]
-        [ text "◀️" ]
+
+
+icon : String -> Html msg
+icon name =
+    iconClassed "" name
+
+
+iconClassed : String -> String -> Html msg
+iconClassed cls name =
+    i [ class <| "material-icons " ++ cls ] [ text name ]

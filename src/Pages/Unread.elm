@@ -19,7 +19,7 @@ import Html exposing (Html, div, section, span, text, header, h2, a)
 import Html.Attributes exposing (class, title)
 import Html.Events exposing (onClick)
 import Net exposing (httpErrorToString)
-import Views exposing (info, loadingIcon, okBtn, notOkBtn)
+import Views exposing (info, loadingIcon, okBtn, notOkBtn, icon, iconClassed)
 import DateUtils exposing (formatDate)
 import Util exposing ((=>))
 import Ports
@@ -270,10 +270,10 @@ viewBookmarks { options, unread, tags, filter, user, lastUpdateTime, status } =
                     , div []
                         [ div [ class "user-badge" ]
                             [ span []
-                                [ span [ class "user-badge-icon" ] [ text "👤" ]
+                                [ iconClassed "user-badge-icon" "account_circle"
                                 , text user
                                 ]
-                            , a [ onClick SignOff, title "Log out" ] [ text "🔚" ]
+                            , a [ onClick SignOff, title "Log out" ] [ icon "exit_to_app" ]
                             ]
                         ]
                     ]

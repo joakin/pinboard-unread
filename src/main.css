@@ -32,8 +32,11 @@
   --border-radius: 3px;
   --border-radius-pill: 20rem;
 
+  --shadow-smallest: 0px 0px 1px;
+  --shadow-vertical-smallest: 0px 1px 1px;
   --shadow-vertical-small: 0px 1px 2px;
   --shadow-vertical-mid: 0px 2px 6px;
+  --shadow-inset-mid: inset 0px 1px 4px;
 }
 
 body {
@@ -47,7 +50,7 @@ td {
   font-family: Roboto, "Segoe UI", Oxygen, Ubuntu, Cantarell, "Open Sans",
     "Helvetica Neue", sans-serif;
   font-size: var(--font-size);
-  margin: 0;
+  margin: 0px;
   color: var(--dark);
 }
 
@@ -69,9 +72,9 @@ input[type="submit"],
 button {
   border-radius: var(--border-radius);
   border: 1px solid var(--dark-shadow-lightest);
-  box-shadow: 0 2px 2px 0 var(--dark-shadow-lightest),
-    0 3px 1px -2px var(--dark-shadow-lighter),
-    0 1px 5px 0 var(--dark-shadow-lightest);
+  box-shadow: 0px 2px 2px 0px var(--dark-shadow-lightest),
+    0px 3px 1px -2px var(--dark-shadow-lighter),
+    0px 1px 5px 0px var(--dark-shadow-lightest);
 }
 
 a {
@@ -107,12 +110,12 @@ a {
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--shadow-vertical-mid) var(--dark-shadow-lighter),
-    0 1px 1px var(--dark-shadow-lighter);
+    var(--shadow-vertical-smallest) var(--dark-shadow-lighter);
   z-index: 1000;
   position: relative;
 }
 .app-header-title {
-  margin: 0;
+  margin: 0px;
   font-size: var(--font-size-big);
   font-weight: normal;
   text-shadow: var(--shadow-vertical-small) var(--dark-shadow);
@@ -149,7 +152,7 @@ a {
 
 .bookmark {
   box-shadow: var(--shadow-vertical-mid) var(--dark-shadow-lightest);
-  margin: 0 calc(0rem - var(--spacing-small)) var(--spacing-small);
+  margin: 0px calc(0rem - var(--spacing-small)) var(--spacing-small);
   background-color: var(--light-lightest);
   border-radius: var(--border-radius);
 }
@@ -163,17 +166,17 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: var(--spacing) 0rem var(--spacing) var(--spacing);
+  padding: var(--spacing) 0px var(--spacing) var(--spacing);
 }
 .bookmark-header-actions {
-  padding: 0 var(--spacing);
+  padding: 0px var(--spacing);
 }
 .bookmark-actions {
   display: flex;
   justify-content: space-around;
   align-items: center;
   background-color: var(--light-light); /*#cfd7e0;*/
-  box-shadow: inset 0 1px 4px var(--dark-shadow-lightest);
+  box-shadow: var(--shadow-inset-mid) var(--dark-shadow-lightest);
   padding: var(--spacing-small) var(--spacing-big);
 }
 .bookmark-actions > * {
@@ -210,14 +213,14 @@ a {
   color: var(--secondary-dark);
   cursor: pointer;
   font-size: var(--font-size-small);
-  box-shadow: inset 0 0 1px var(--secondary-dark);
+  box-shadow: inset var(--shadow-smallest) var(--secondary-dark);
 }
 .tag.selected {
   background-color: var(--secondary);
   color: var(--dark);
   border: 1px solid var(--dark-shadow-lightest);
-  box-shadow: 0 1px 2px var(--dark-shadow-lightest),
-    inset 0 -1px 2px var(--secondary-light);
+  box-shadow: var(--shadow-vertical-small) var(--dark-shadow-lightest),
+    inset 0px -1px 2px var(--secondary-light);
   position: relative;
   top: -1px;
 }
@@ -258,7 +261,7 @@ a {
 .token-form-input,
 .token-form-error {
   width: 70%;
-  min-width: 0;
+  min-width: 0px;
 }
 .token-form-loading {
   position: absolute;
@@ -285,7 +288,7 @@ a {
   font-size: var(--font-size-small);
   text-align: right;
   background-color: var(--light-lightest);
-  box-shadow: 0px 0px 1px var(--dark-shadow-light);
+  box-shadow: var(--shadow-smallest) var(--dark-shadow-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -302,7 +305,7 @@ a {
 .user-badge {
   display: inline-block;
   background-color: var(--primary-light);
-  box-shadow: 0px 1px 1px var(--dark-shadow-light);
+  box-shadow: var(--shadow-vertical-smallest) var(--dark-shadow-light);
   border-radius: var(--border-radius-pill);
   max-height: 1.7rem;
   line-height: 1.7rem;
@@ -310,17 +313,17 @@ a {
 }
 .user-badge-icon {
   display: inline-block;
-  padding: 0 var(--spacing-smaller) 0 0;
+  padding: 0px var(--spacing-smaller) 0px 0px;
 }
 .user-badge > * {
   display: inline-block;
 }
 .user-badge > :first-child {
-  padding: 0 var(--spacing-small) 0 var(--spacing-smaller);
+  padding: 0px var(--spacing-small) 0px var(--spacing-smaller);
   background-color: var(--light-lightest);
   border-radius: var(--border-radius-pill);
 }
 .user-badge > :last-child {
-  padding: 0 var(--spacing-small) 0 var(--spacing-smaller);
+  padding: 0px var(--spacing-small) 0px var(--spacing-smaller);
   color: var(--light-lightest);
 }

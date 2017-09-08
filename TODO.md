@@ -5,6 +5,7 @@
 * Bottom bar
   * Unread, about, logout
 * Implement about
+* HTML lazy performance optimizations
 * Add manifest
 * Add SW pre-cache support
 * Try installing in device

@@ -17,7 +17,7 @@ import Html.Attributes exposing (class, classList, placeholder, target, value, t
 import Html.Events exposing (onInput, onSubmit)
 import Net exposing (httpErrorToString)
 import Util exposing ((=>))
-import Views exposing (loadingIcon)
+import Views exposing (loadingIcon, togglable)
 
 
 type alias Data =
@@ -128,13 +128,12 @@ viewLogin data =
                         , loadingIcon ()
                         ]
                     ]
-                , div
-                    [ classList
-                        [ "token-form-error" => True
-                        , "hidden" => not hasError
-                        ]
+                , togglable hasError
+                    3
+                    [ div
+                        [ class "token-form-error" ]
+                        [ text error ]
                     ]
-                    [ text error ]
                 , input
                     [ type_ "password"
                     , placeholder "input your token here!"

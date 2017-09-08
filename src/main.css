@@ -31,6 +31,9 @@
 
   --border-radius: 3px;
   --border-radius-pill: 20rem;
+
+  --shadow-vertical-small: 0px 1px 2px;
+  --shadow-vertical-mid: 0px 2px 6px;
 }
 
 body {
@@ -94,8 +97,7 @@ a {
   right: 0;
 }
 
-.app {
-}
+/* .app {} */
 .app-header {
   background-color: var(--primary);
   padding: var(--spacing-small) var(--spacing-big);
@@ -104,7 +106,7 @@ a {
   min-height: var(--header-height);
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px var(--dark-shadow-lighter),
+  box-shadow: var(--shadow-vertical-mid) var(--dark-shadow-lighter),
     0 1px 1px var(--dark-shadow-lighter);
   z-index: 1000;
   position: relative;
@@ -113,7 +115,7 @@ a {
   margin: 0;
   font-size: var(--font-size-big);
   font-weight: normal;
-  text-shadow: 0px 1px 2px var(--dark-shadow);
+  text-shadow: var(--shadow-vertical-small) var(--dark-shadow);
 }
 .app-header-pin {
   background: var(--light-lightest);
@@ -126,7 +128,7 @@ a {
   text-align: center;
   text-shadow: none;
   font-size: var(--font-size-small);
-  box-shadow: 0px 1px 2px var(--dark-shadow-light);
+  box-shadow: var(--shadow-vertical-small) var(--dark-shadow-light);
   vertical-align: middle;
 }
 
@@ -146,7 +148,7 @@ a {
 }
 
 .bookmark {
-  box-shadow: 0 2px 6px var(--dark-shadow-lightest);
+  box-shadow: var(--shadow-vertical-mid) var(--dark-shadow-lightest);
   margin: 0 calc(0rem - var(--spacing-small)) var(--spacing-small);
   background-color: var(--light-lightest);
   border-radius: var(--border-radius);
@@ -189,9 +191,8 @@ a {
   padding: var(--spacing-small) var(--spacing);
   min-height: 0.6em;
 }
-.bookmark-description,
-.bookmark-footer {
-}
+/* .bookmark-description,
+.bookmark-footer { } */
 .bookmark-footer > .tag {
   margin-right: var(--spacing-small);
 }
@@ -296,8 +297,7 @@ a {
   margin-left: var(--spacing-small);
 }
 
-.unread-page-header {
-}
+/* .unread-page-header { } */
 
 .user-badge {
   display: inline-block;

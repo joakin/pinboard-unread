@@ -87,7 +87,20 @@ a {
 }
 
 .hidden {
-  display: none !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-width: 0px !important;
+  overflow: hidden;
+}
+
+.transition-height {
+  overflow: hidden;
+  transition: max-height 0.2s linear;
+}
+.transition-transform {
+  overflow: hidden;
+  transition: transform 0.2s linear;
 }
 
 .loading-overlay .app-header {
@@ -169,6 +182,9 @@ a {
 .bookmark-header-actions {
   padding: 0px var(--spacing);
 }
+/* To animate the bookmark header icons we need inline block */
+.bookmark-header-actions>* { display: inline-block; }
+
 .bookmark-actions {
   display: flex;
   justify-content: space-around;

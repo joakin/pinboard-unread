@@ -5,7 +5,7 @@ import Json.Encode as E
 import Tags exposing (Tags, Filter(..))
 import Html exposing (Html, div, a, text)
 import Html.Attributes exposing (class, classList, href, target, title)
-import Views exposing (info, editBtn, markReadBtn, deleteBtn, rightChevronBtn)
+import Views exposing (togglable, info, editBtn, markReadBtn, deleteBtn, upDownChevronBtn)
 import Util exposing ((=>))
 
 
@@ -113,24 +113,15 @@ viewBookmark filter options bookmark =
                     bookmark.description
                 ]
             , div [ class "bookmark-header-actions" ]
-                [ rightChevronBtn options.actionsExpanded (options.onExpandActions bookmark.href) ]
+                [ upDownChevronBtn options.actionsExpanded (options.onExpandActions bookmark.href) ]
             ]
-        , div
-            [ class "bookmark-separator"
-            , classList
-                [ ( "hidden", not options.actionsExpanded )
+        , togglable options.actionsExpanded
+            3
+            [ div [ class "bookmark-actions" ]
+                [ markReadBtn (options.onMarkRead bookmark.href)
+                , editBtn (options.onEdit bookmark.href)
+                , deleteBtn (options.onDelete bookmark.href)
                 ]
-            ]
-            []
-        , div
-            [ class "bookmark-actions"
-            , classList
-                [ ( "hidden", not options.actionsExpanded )
-                ]
-            ]
-            [ markReadBtn (options.onMarkRead bookmark.href)
-            , editBtn (options.onEdit bookmark.href)
-            , deleteBtn (options.onDelete bookmark.href)
             ]
         ]
             ++ (if String.isEmpty bookmark.extended then

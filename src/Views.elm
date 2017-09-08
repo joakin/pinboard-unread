@@ -1,6 +1,6 @@
 module Views exposing (..)
 
-import Html exposing (Html, a, span, text, i)
+import Html exposing (Html, div, a, span, text, i)
 import Html.Attributes exposing (class, style, classList, title)
 import Html.Events exposing (onClick)
 import Util exposing ((=>))
@@ -56,16 +56,19 @@ notOkBtn title_ =
     a [ title title_ ] [ icon "error" ]
 
 
-rightChevronBtn : Bool -> msg -> Html msg
-rightChevronBtn expanded msg =
+upDownChevronBtn : Bool -> msg -> Html msg
+upDownChevronBtn expanded msg =
     a
-        [ onClick msg ]
-        [ icon <|
+        [ onClick msg
+        , class "transition-transform"
+        , style <|
             if expanded then
-                "expand_less"
+                [ "transform" => "rotateZ(180deg)"
+                ]
             else
-                "expand_more"
+                []
         ]
+        [ icon "expand_more" ]
 
 
 icon : String -> Html msg
@@ -76,3 +79,15 @@ icon name =
 iconClassed : String -> String -> Html msg
 iconClassed cls name =
     i [ class <| "material-icons " ++ cls ] [ text name ]
+
+
+togglable : Bool -> Float -> List (Html msg) -> Html msg
+togglable visible estimatedHeight html =
+    div
+        [ classList
+            [ "hidden" => not visible
+            , "transition-height" => True
+            ]
+        , style [ "max-height" => (toString estimatedHeight) ++ "rem" ]
+        ]
+        html

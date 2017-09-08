@@ -29,7 +29,7 @@
 
   --header-height: 2.5rem;
 
-  --border-radius: 3px;
+  --border-radius: 2px;
   --border-radius-pill: 20rem;
 
   --shadow-smallest: 0px 0px 1px;
@@ -71,10 +71,8 @@ textarea,
 input[type="submit"],
 button {
   border-radius: var(--border-radius);
-  border: 1px solid var(--dark-shadow-lightest);
-  box-shadow: 0px 2px 2px 0px var(--dark-shadow-lightest),
-    0px 3px 1px -2px var(--dark-shadow-lighter),
-    0px 1px 5px 0px var(--dark-shadow-lightest);
+  border: 1px solid var(--dark-shadow-lighter);
+  box-shadow: var(--shadow-vertical-small) var(--dark-shadow-lightest);
 }
 
 a {

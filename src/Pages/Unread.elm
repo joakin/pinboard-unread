@@ -23,7 +23,7 @@ import Views exposing (info, loadingIcon, okBtn, notOkBtn, icon, iconClassed)
 import DateUtils exposing (formatDate)
 import Util exposing ((=>))
 import Ports
-import Tuple2 as T
+import Tuple as T
 import Json.Decode as D
 import Dict exposing (Dict)
 
@@ -44,6 +44,7 @@ type alias BookmarkUIOptions =
     { actionsExpanded : Bool }
 
 
+defaultOptions : BookmarkUIOptions
 defaultOptions =
     { actionsExpanded = False }
 

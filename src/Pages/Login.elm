@@ -84,7 +84,7 @@ viewLogin data =
                                 UpdateSkippedError str ->
                                     Debug.crash "Got a UpdateSkippedError in Login view where there is no lastUpdateTime"
 
-                                HttpError err_ ->
+                                FetchHttpError err_ ->
                                     httpErrorToString err_
                     in
                         ( True, msg )

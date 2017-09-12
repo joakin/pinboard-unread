@@ -82,6 +82,11 @@ boolToYes b =
         "no"
 
 
+toggleRead : Bookmark -> Bookmark
+toggleRead b =
+    { b | toread = not b.toread }
+
+
 filter : Filter -> Bookmark -> Bool
 filter f bookmark =
     case f of
@@ -112,41 +117,49 @@ type alias BookmarkOptions msg =
 
 viewBookmark : Filter -> BookmarkOptions msg -> Bookmark -> Html msg
 viewBookmark filter options bookmark =
-    div [ class "bookmark" ] <|
-        [ div [ class "bookmark-header" ]
-            [ a
-                [ href bookmark.href
-                , target "_blank"
-                , title bookmark.description
-                , class "bookmark-header-link"
-                ]
-                [ text
-                    bookmark.description
-                ]
-            , div [ class "bookmark-header-actions" ]
-                [ upDownChevronBtn options.actionsExpanded (options.onExpandActions bookmark.href) ]
-            ]
-        , togglable options.actionsExpanded
-            3
-            [ div [ class "bookmark-actions" ]
-                [ markReadBtn (options.onMarkRead bookmark.href)
-                , editBtn (options.onEdit bookmark.href)
-                , deleteBtn (options.onDelete bookmark.href)
-                ]
+    div
+        [ class "bookmark"
+        , classList
+            [ "read" => not bookmark.toread
             ]
         ]
-            ++ (if String.isEmpty bookmark.extended then
-                    []
-                else
-                    [ div [ class "bookmark-separator" ] []
-                    , div [ class "bookmark-description" ] [ text bookmark.extended ]
+    <|
+        List.concat
+            [ [ div [ class "bookmark-header" ]
+                    [ a
+                        [ href bookmark.href
+                        , target "_blank"
+                        , title bookmark.description
+                        , class "bookmark-header-link"
+                        ]
+                        [ text
+                            bookmark.description
+                        ]
+                    , div [ class "bookmark-header-actions" ]
+                        [ upDownChevronBtn options.actionsExpanded (options.onExpandActions bookmark.href) ]
                     ]
-               )
-            ++ (if Tags.untagged == bookmark.tags then
-                    []
-                else
-                    [ div [ class "bookmark-separator" ] []
-                    , div [ class "bookmark-footer" ] <|
-                        Tags.viewTags filter options.onTagSelect bookmark.tags
+              , togglable options.actionsExpanded
+                    3
+                    [ div [ class "bookmark-actions" ]
+                        [ markReadBtn bookmark.toread (options.onMarkRead bookmark.href)
+                        , editBtn (options.onEdit bookmark.href)
+                        , deleteBtn (options.onDelete bookmark.href)
+                        ]
                     ]
-               )
+              ]
+            , (if String.isEmpty bookmark.extended then
+                []
+               else
+                [ div [ class "bookmark-separator" ] []
+                , div [ class "bookmark-description" ] [ text bookmark.extended ]
+                ]
+              )
+            , (if Tags.untagged == bookmark.tags then
+                []
+               else
+                [ div [ class "bookmark-separator" ] []
+                , div [ class "bookmark-footer" ] <|
+                    Tags.viewTags filter options.onTagSelect bookmark.tags
+                ]
+              )
+            ]

@@ -36,9 +36,22 @@ deleteBtn msg =
     a [ onClick msg, title "Delete" ] [ icon "delete_forever" ]
 
 
-markReadBtn : msg -> Html msg
-markReadBtn msg =
-    a [ onClick msg, title "Mark as read" ] [ icon "visibility_off" ]
+markReadBtn : Bool -> msg -> Html msg
+markReadBtn unread msg =
+    let
+        t =
+            if unread then
+                "Mark as read"
+            else
+                "Mark as unread"
+
+        i =
+            if unread then
+                "visibility"
+            else
+                "visibility_off"
+    in
+        a [ onClick msg, title t ] [ icon i ]
 
 
 editBtn : msg -> Html msg

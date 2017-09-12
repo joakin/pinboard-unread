@@ -1,9 +1,11 @@
 module Net
     exposing
         ( deleteBookmark
-        , fetchUnreadBookmarks
-        , httpErrorToString
         , FetchBookmarksError(..)
+        , fetchUnreadBookmarks
+        , UpdateBookmarkError(..)
+        , updateBookmark
+        , httpErrorToString
         )
 
 import Json.Decode as D exposing (Decoder)
@@ -65,19 +67,19 @@ deleteBookmark token uri =
 
 type FetchBookmarksError
     = UpdateSkippedError String
-    | HttpError Http.Error
+    | FetchHttpError Http.Error
 
 
 fetchUnreadBookmarks : String -> String -> Task FetchBookmarksError ( String, List Bookmark )
 fetchUnreadBookmarks token lastUpdateTimeString =
     Http.toTask (lastUpdateTime token)
-        |> Task.mapError HttpError
+        |> Task.mapError FetchHttpError
         |> Task.andThen
             (\{ updateTime } ->
                 if updateTime /= lastUpdateTimeString then
                     unreadBookmarks token
                         |> Http.toTask
-                        |> Task.mapError HttpError
+                        |> Task.mapError FetchHttpError
                         |> Task.map (\bms -> ( updateTime, bms ))
                 else
                     Task.fail (UpdateSkippedError "Update time is the same.")
@@ -90,29 +92,34 @@ type UpdateBookmarkError
     | RequestFailed Http.Error
 
 
-updateBookmark : String -> String -> Task UpdateBookmarkError Bookmark
-updateBookmark token uri =
+updateBookmark : String -> String -> (Bookmark -> Bookmark) -> Task UpdateBookmarkError Bookmark
+updateBookmark token uri update =
     Http.toTask (getBookmark token uri)
         |> Task.mapError RequestFailed
         |> Task.andThen
             (\bookmarkList ->
                 case bookmarkList of
                     [ bookmark ] ->
-                        addBookmark token bookmark
-                            |> Http.toTask
-                            |> Task.mapError RequestFailed
-                            |> Task.andThen
-                                (\resp ->
-                                    case resp of
-                                        Ok () ->
-                                            Task.succeed bookmark
-
-                                        Err str ->
-                                            Task.fail (UpdateFailed str)
-                                )
+                        let
+                            newBookmark =
+                                update bookmark
+                        in
+                            addBookmark token newBookmark
+                                |> Http.toTask
+                                |> Task.mapError RequestFailed
+                                |> Task.map (\resp -> ( resp, newBookmark ))
 
                     _ ->
                         Task.fail (UnexpectedNumberOfBookmarksFound bookmarkList)
+            )
+        |> Task.andThen
+            (\( resp, bookmark ) ->
+                case resp of
+                    Ok () ->
+                        Task.succeed bookmark
+
+                    Err str ->
+                        Task.fail (UpdateFailed str)
             )
 
 

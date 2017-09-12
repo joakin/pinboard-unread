@@ -10,7 +10,7 @@ module Pages.Unread
         )
 
 import Types exposing (Token, Status(..), FlagsData)
-import Net exposing (FetchBookmarksError(..))
+import Net exposing (FetchBookmarksError(..), UpdateBookmarkError(..))
 import Tags exposing (Tags, Filter(..))
 import Bookmarks exposing (Bookmark, Bookmark)
 import Task
@@ -146,6 +146,33 @@ removeBookmark url data =
             data
 
 
+updateBookmark : String -> (Bookmark -> Bookmark) -> Data -> Data
+updateBookmark url update data =
+    case data.unread of
+        Just bs ->
+            let
+                bookmarks =
+                    List.map
+                        (\b ->
+                            if b.href == url then
+                                update b
+                            else
+                                b
+                        )
+                        bs
+
+                tags =
+                    Bookmarks.tagsFrom bookmarks
+            in
+                { data
+                    | unread = Just bookmarks
+                    , tags = tags
+                }
+
+        Nothing ->
+            data
+
+
 save : String -> String -> List Bookmark -> Cmd Msg
 save token updateTime bookmarks =
     Ports.save
@@ -162,6 +189,7 @@ type Msg
     | ExpandActions String
     | EditBookmark String
     | MarkReadBookmark String
+    | MarkReadBookmarkResponse String (Result UpdateBookmarkError Bookmark)
     | DeleteBookmark String
     | DeleteBookmarkResponse String (Result Http.Error (Result String ()))
     | SignOff
@@ -231,6 +259,36 @@ update msg data =
             data => Idle
 
         MarkReadBookmark url ->
+            let
+                toggleRead =
+                    Bookmarks.toggleRead
+            in
+                -- Apply optimistic updates to the UI (apply the change before even being saved)
+                updateBookmark url toggleRead data
+                    => Cmd
+                        (Net.updateBookmark data.token.value url toggleRead
+                            |> Task.attempt (MarkReadBookmarkResponse url)
+                        )
+
+        MarkReadBookmarkResponse url (Ok bookmark) ->
+            let
+                -- Re-update the local data after the request successfully finishes
+                newData =
+                    updateBookmark url (always bookmark) data
+            in
+                newData
+                    -- And only then store it in local storage
+                    => Cmd
+                        (save
+                            newData.token.value
+                            newData.lastUpdateTime
+                            (Maybe.withDefault [] newData.unread)
+                        )
+
+        MarkReadBookmarkResponse url (Err bookmark) ->
+            -- If the request failed don't do anything for now
+            -- TODO: Have a deleteStatus: Status per bookmark to indicate errors?
+            -- Or toasts?
             data => Idle
 
         ExpandActions url ->
@@ -329,5 +387,5 @@ viewRefresh status =
         Error (UpdateSkippedError err) ->
             okBtn FetchBookmarks
 
-        Error (HttpError err) ->
+        Error (FetchHttpError err) ->
             notOkBtn <| httpErrorToString err

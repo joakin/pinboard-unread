@@ -5,7 +5,7 @@ module Pages.Unread
         , Response(..)
         , initWithDecodedBookmarksAndSave
         , initWithFlagsAndFetch
-        , viewBookmarks
+        , view
         , update
         )
 
@@ -17,7 +17,7 @@ import Task
 import Http
 import Html exposing (Html, div, section, span, text, header, h2, a)
 import Html.Keyed as Keyed
-import Html.Lazy as Lazy
+import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Html.Attributes exposing (class, title)
 import Html.Events exposing (onClick)
 import Net exposing (httpErrorToString)
@@ -306,79 +306,88 @@ update msg data =
                 { data | options = newOptions } => Idle
 
 
-viewBookmarks : Data -> Html Msg
-viewBookmarks { options, unread, tags, filter, user, lastUpdateTime, status } =
+view : Data -> Html Msg
+view { options, unread, tags, filter, user, lastUpdateTime, status } =
+    div [] <|
+        [ header [ class "unread-page-header" ]
+            [ section [ class "menu-bar content" ]
+                [ lazy2 viewStatus lastUpdateTime status
+                , div [] [ lazy viewUserBadge user ]
+                ]
+            , h2 [ class "content" ] [ text "Unread bookmarks" ]
+            ]
+        , div [ class "content" ]
+            (case unread of
+                Just unreadBookmarks ->
+                    let
+                        filteredUnread =
+                            List.filter (Bookmarks.filter filter) unreadBookmarks
+                    in
+                        [ lazy2 viewTags filter tags
+                        , lazy2 viewStats filteredUnread unreadBookmarks
+                        , lazy3 viewBookmarks filter options filteredUnread
+                        ]
+
+                Nothing ->
+                    [ info "No bookmarks fetched yet." ]
+            )
+        ]
+
+
+viewStats : List Bookmark -> List Bookmark -> Html Msg
+viewStats filtered all =
     let
-        unreadBookmarks =
-            Maybe.withDefault [] unread
-
         total =
-            List.length unreadBookmarks |> toString
-
-        filteredUnread =
-            List.filter (Bookmarks.filter filter) unreadBookmarks
+            List.length all |> toString
 
         filteredTotal =
-            List.length filteredUnread |> toString
+            List.length filtered |> toString
     in
-        div [] <|
-            [ header [ class "unread-page-header" ]
-                [ section [ class "menu-bar content" ]
-                    [ span [ title "Last update date from pinboard.in" ]
-                        [ viewRefresh status
-                        , span [] [ text <| formatDate lastUpdateTime ]
-                        ]
-                    , div []
-                        [ div [ class "user-badge" ]
-                            [ span []
-                                [ iconClassed "user-badge-icon" "account_circle"
-                                , text user
-                                ]
-                            , a [ onClick SignOff, title "Log out" ] [ icon "exit_to_app" ]
-                            ]
-                        ]
-                    ]
-                , h2 [ class "content" ] [ text "Unread bookmarks" ]
-                ]
+        section [ class "stats" ]
+            [ span [] []
+            , span [] [ text <| filteredTotal ++ " / " ++ total ]
             ]
-                ++ [ div [ class "content" ]
-                        (case unread of
-                            Just unreadBookmarks ->
-                                [ section [ class "unread-tags" ] <|
-                                    Tags.viewTags filter TagSelected tags
-                                , section [ class "stats" ]
-                                    [ span [] []
-                                    , span [] [ text <| filteredTotal ++ " / " ++ total ]
-                                    ]
-                                , Keyed.node "section" [] <|
-                                    List.map
-                                        (\b ->
-                                            let
-                                                bookmarkOptions =
-                                                    Dict.get b.href options
-                                                        |> Maybe.withDefault defaultOptions
-                                            in
-                                                ( b.href
-                                                , Lazy.lazy3
-                                                    Bookmarks.viewBookmark
-                                                    filter
-                                                    { actionsExpanded = bookmarkOptions.actionsExpanded
-                                                    , onExpandActions = ExpandActions
-                                                    , onMarkRead = MarkReadBookmark
-                                                    , onEdit = EditBookmark
-                                                    , onDelete = DeleteBookmark
-                                                    , onTagSelect = TagSelected
-                                                    }
-                                                    b
-                                                )
-                                        )
-                                        filteredUnread
-                                ]
 
-                            Nothing ->
-                                [ info "No bookmarks fetched yet." ]
-                        )
-                   ]
+
+viewBookmarks : Filter -> Dict String BookmarkUIOptions -> List Bookmark -> Html Msg
+viewBookmarks filter options unreadBookmarks =
+    Keyed.node "section" [] <|
+        List.map
+            (\b ->
+                let
+                    bookmarkOptions =
+                        Dict.get b.href options
+                            |> Maybe.withDefault defaultOptions
+                in
+                    ( b.href
+                    , lazy3
+                        Bookmarks.viewBookmark
+                        filter
+                        { actionsExpanded = bookmarkOptions.actionsExpanded
+                        , onExpandActions = ExpandActions
+                        , onMarkRead = MarkReadBookmark
+                        , onEdit = EditBookmark
+                        , onDelete = DeleteBookmark
+                        , onTagSelect = TagSelected
+                        }
+                        b
+                    )
+            )
+            unreadBookmarks
+
+
+viewTags : Filter -> Tags -> Html Msg
+viewTags filter tags =
+    section [ class "unread-tags" ] <|
+        Tags.viewTags filter TagSelected tags
+
+
+viewStatus : String -> Status FetchBookmarksError -> Html Msg
+viewStatus lastUpdateTime status =
+    span [ title "Last update date from pinboard.in" ]
+        [ viewRefresh status
+        , span [] [ text <| formatDate lastUpdateTime ]
+        ]
 
 
 viewRefresh : Status FetchBookmarksError -> Html Msg
@@ -395,3 +404,14 @@ viewRefresh status =
 
         Error (FetchHttpError err) ->
             notOkBtn <| httpErrorToString err
+
+
+viewUserBadge : String -> Html Msg
+viewUserBadge user =
+    div [ class "user-badge" ]
+        [ span []
+            [ iconClassed "user-badge-icon" "account_circle"
+            , text user
+            ]
+        , a [ onClick SignOff, title "Log out" ] [ icon "exit_to_app" ]
+        ]

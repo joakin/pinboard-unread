@@ -110,7 +110,7 @@ view model =
                     Html.map LoginMsg <| Login.viewLogin data
 
                 UnreadPage data ->
-                    Html.map UnreadMsg <| Unread.viewBookmarks data
+                    Html.map UnreadMsg <| Unread.view data
             ]
         ]
 

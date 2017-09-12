@@ -16,6 +16,8 @@ import Bookmarks exposing (Bookmark, Bookmark)
 import Task
 import Http
 import Html exposing (Html, div, section, span, text, header, h2, a)
+import Html.Keyed as Keyed
+import Html.Lazy as Lazy
 import Html.Attributes exposing (class, title)
 import Html.Events exposing (onClick)
 import Net exposing (httpErrorToString)
@@ -348,7 +350,7 @@ viewBookmarks { options, unread, tags, filter, user, lastUpdateTime, status } =
                                     [ span [] []
                                     , span [] [ text <| filteredTotal ++ " / " ++ total ]
                                     ]
-                                , section [] <|
+                                , Keyed.node "section" [] <|
                                     List.map
                                         (\b ->
                                             let
@@ -356,7 +358,10 @@ viewBookmarks { options, unread, tags, filter, user, lastUpdateTime, status } =
                                                     Dict.get b.href options
                                                         |> Maybe.withDefault defaultOptions
                                             in
-                                                Bookmarks.viewBookmark filter
+                                                ( b.href
+                                                , Lazy.lazy3
+                                                    Bookmarks.viewBookmark
+                                                    filter
                                                     { actionsExpanded = bookmarkOptions.actionsExpanded
                                                     , onExpandActions = ExpandActions
                                                     , onMarkRead = MarkReadBookmark
@@ -365,6 +370,7 @@ viewBookmarks { options, unread, tags, filter, user, lastUpdateTime, status } =
                                                     , onTagSelect = TagSelected
                                                     }
                                                     b
+                                                )
                                         )
                                         filteredUnread
                                 ]

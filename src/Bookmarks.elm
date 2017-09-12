@@ -58,6 +58,17 @@ encodeBookmark b =
         ]
 
 
+bookmarkToQueryString : Bookmark -> List ( String, String )
+bookmarkToQueryString b =
+    [ "url" => b.href
+    , "description" => b.description
+    , "extended" => b.extended
+    , "tags" => (Tags.toString b.tags)
+    , "shared" => (boolToYes b.shared)
+    , "toread" => (boolToYes b.toread)
+    ]
+
+
 yesToBool : String -> Bool
 yesToBool yes =
     yes == "yes"

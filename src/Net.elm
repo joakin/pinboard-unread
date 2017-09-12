@@ -9,13 +9,8 @@ module Net
 import Json.Decode as D exposing (Decoder)
 import Http exposing (stringBody)
 import Util exposing ((=>))
-import Bookmarks exposing (Bookmark, decodeBookmarkList)
+import Bookmarks exposing (Bookmark, decodeBookmarkList, bookmarkToQueryString)
 import Task exposing (Task)
-
-
-type FetchBookmarksError
-    = UpdateSkippedError String
-    | HttpError Http.Error
 
 
 type alias UpdateTimeResponse =
@@ -48,6 +43,11 @@ decodeActionResult =
             )
 
 
+decodeGetBookmarkResponse : Decoder (List Bookmark)
+decodeGetBookmarkResponse =
+    D.at [ "posts" ] decodeBookmarkList
+
+
 lastUpdateTime : String -> Http.Request UpdateTimeResponse
 lastUpdateTime token =
     get "posts/update" token [] decodeUpdateTime
@@ -61,6 +61,11 @@ unreadBookmarks token =
 deleteBookmark : String -> String -> Http.Request ActionResult
 deleteBookmark token uri =
     get "posts/delete" token [ "url" => uri ] decodeActionResult
+
+
+type FetchBookmarksError
+    = UpdateSkippedError String
+    | HttpError Http.Error
 
 
 fetchUnreadBookmarks : String -> String -> Task FetchBookmarksError ( String, List Bookmark )
@@ -77,6 +82,48 @@ fetchUnreadBookmarks token lastUpdateTimeString =
                 else
                     Task.fail (UpdateSkippedError "Update time is the same.")
             )
+
+
+type UpdateBookmarkError
+    = UnexpectedNumberOfBookmarksFound (List Bookmark)
+    | UpdateFailed String
+    | RequestFailed Http.Error
+
+
+updateBookmark : String -> String -> Task UpdateBookmarkError Bookmark
+updateBookmark token uri =
+    Http.toTask (getBookmark token uri)
+        |> Task.mapError RequestFailed
+        |> Task.andThen
+            (\bookmarkList ->
+                case bookmarkList of
+                    [ bookmark ] ->
+                        addBookmark token bookmark
+                            |> Http.toTask
+                            |> Task.mapError RequestFailed
+                            |> Task.andThen
+                                (\resp ->
+                                    case resp of
+                                        Ok () ->
+                                            Task.succeed bookmark
+
+                                        Err str ->
+                                            Task.fail (UpdateFailed str)
+                                )
+
+                    _ ->
+                        Task.fail (UnexpectedNumberOfBookmarksFound bookmarkList)
+            )
+
+
+addBookmark : String -> Bookmark -> Http.Request ActionResult
+addBookmark token bookmark =
+    get "posts/add" token (bookmarkToQueryString bookmark) decodeActionResult
+
+
+getBookmark : String -> String -> Http.Request (List Bookmark)
+getBookmark token uri =
+    get "posts/get" token [ "url" => uri ] decodeGetBookmarkResponse
 
 
 

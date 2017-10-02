@@ -1,11 +1,11 @@
 * Bookmark actions icon
   - Expandable section
-    * Add Mark as read
+    - Add Mark as read
     * Add Edit
 * Bottom bar
   * Unread, about, logout
 * Implement about
-* HTML lazy performance optimizations
+- HTML lazy performance optimizations
 * Add manifest
 * Add SW pre-cache support
 * Try installing in device

@@ -1,0 +1,15 @@
+{
+  "short_name": "Pinboard unread",
+  "name": "Pinboard unread bookmarks",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./?utm_source=web_app_manifest",
+  "display": "standalone",
+  "theme_color": "#d32f2f",
+  "background_color": "#d32f2f"
+}

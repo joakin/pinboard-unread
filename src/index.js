@@ -2,6 +2,9 @@ import "./animate.css";
 import "./main.css";
 import { Main } from "./Main.elm";
 import { getData, updateData, removeData } from "./storage";
+import registerServiceWorker from './registerServiceWorker';
+
+registerServiceWorker();
 
 const app = Main.embed(document.getElementById("root"), {
   data: getData()

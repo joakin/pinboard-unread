@@ -1,6 +1,6 @@
 module Views exposing (..)
 
-import Html exposing (Html, div, a, span, text, i)
+import Html exposing (Html, div, a, span, text, i, label)
 import Html.Attributes exposing (class, style, classList, title)
 import Html.Events exposing (onClick)
 import Util exposing ((=>))
@@ -104,3 +104,35 @@ togglable visible estimatedHeight html =
         , style [ "max-height" => (toString estimatedHeight) ++ "rem" ]
         ]
         html
+
+
+navBtn : { onClick : msg, icon : String, label : String, active : Bool } -> Html msg
+navBtn opts =
+    a
+        [ class "nav-btn"
+        , classList [ ( "active", opts.active ) ]
+        , onClick opts.onClick
+        ]
+        [ icon opts.icon
+        , label [] [ text opts.label ]
+        ]
+
+
+bookmarksBtn : Bool -> msg -> Html msg
+bookmarksBtn active onClick =
+    navBtn
+        { onClick = onClick
+        , icon = "collections_bookmark"
+        , label = "Bookmarks"
+        , active = active
+        }
+
+
+aboutBtn : Bool -> msg -> Html msg
+aboutBtn active onClick =
+    navBtn
+        { onClick = onClick
+        , icon = "info"
+        , label = "About"
+        , active = active
+        }

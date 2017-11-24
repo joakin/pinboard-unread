@@ -20,7 +20,8 @@
 
   --font-size: 18px;
   --font-size-big: 1.3rem;
-  --font-size-small: 0.7rem;
+  --font-size-mid: 0.777778rem;
+  --font-size-small: 0.666667rem;
 
   --spacing: 1rem;
   --spacing-smaller: 0.3rem;
@@ -36,7 +37,15 @@
   --shadow-vertical-smallest: 0px 1px 1px;
   --shadow-vertical-small: 0px 1px 2px;
   --shadow-vertical-mid: 0px 2px 6px;
+  --shadow-vertical-inv-mid: 0px -2px 6px;
   --shadow-inset-mid: inset 0px 1px 4px;
+}
+
+html,
+body,
+#root,
+.app {
+  height: 100%;
 }
 
 body {
@@ -50,6 +59,7 @@ td {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
   font-size: var(--font-size);
+  line-height: 1.4;
   margin: 0px;
   color: var(--dark);
 }
@@ -79,6 +89,14 @@ a {
   color: var(--primary);
   text-decoration: none;
   cursor: pointer;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+}
+
+dl {
+  margin-left: 0.5rem;
+}
+dd {
+  margin-bottom: 0.5rem;
 }
 
 .material-icons {
@@ -147,13 +165,42 @@ a {
 }
 
 .app-header-content,
-.app-body {
+.app-body,
+.app-bottom-navigation-content {
   max-width: 80ex;
   margin: auto;
 }
 
 .app-body {
   padding: 0em 0em 4rem;
+}
+.page {
+  /* overflow: auto;
+  -webkit-overflow-scrolling: touch; */
+  display: none;
+}
+.page.active {
+  display: initial;
+}
+
+.app-bottom-navigation {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--light-lightest);
+  border-top: 1px solid var(--light);
+  box-shadow: var(--shadow-vertical-inv-mid) var(--dark-shadow-lightest);
+}
+.app-bottom-navigation-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  min-height: 2.5rem;
+}
+.app-bottom-navigation-content > * {
+  padding: 0.3rem 0.5rem 0.5rem;
+  flex: 1;
 }
 
 .content {
@@ -249,9 +296,11 @@ a {
 
 .unread-tags {
   margin-bottom: var(--spacing);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 .unread-tags > .tag {
-  margin-right: var(--spacing-small);
   margin-bottom: var(--spacing-small);
 }
 
@@ -349,3 +398,33 @@ a {
   padding: 0px var(--spacing-small) 0px var(--spacing-smaller);
   color: var(--light-lightest);
 }
+
+.nav-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--dark);
+}
+.nav-btn.active {
+  color: var(--primary);
+}
+.nav-btn > label {
+  font-size: var(--font-size-small);
+  transition: font-size 0.1s ease-out;
+}
+.nav-btn.active > label {
+  font-size: var(--font-size-mid);
+}
+
+/**/
+.elm-mini-controls {
+  transition: transform 0.3s ease-out;
+  transform: translateX(90%) translateY(50%);
+  transform-origin: bottom right;
+}
+.elm-mini-controls:hover {
+  transform: none;
+}
+
+/**/

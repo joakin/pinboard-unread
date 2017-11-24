@@ -1,25 +1,35 @@
 module Main exposing (..)
 
 import Html exposing (Html, div, header, h1, text, section, span)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, classList)
 import Ports
 import Types
 import Pages.Login as Login
 import Pages.Unread as Unread
+import Pages.About as About
 import Tuple as T
 import Util exposing ((=>))
+import Views exposing (bookmarksBtn, aboutBtn)
+import Html.Keyed as Keyed
 
 
 ---- MODEL ----
 
 
 type alias Model =
-    Page
+    { route : Route
+    , state : BookmarksState
+    }
 
 
-type Page
+type BookmarksState
     = LoginPage Login.Data
     | UnreadPage Unread.Data
+
+
+type Route
+    = About
+    | Bookmarks
 
 
 type alias Flags =
@@ -37,6 +47,7 @@ init { data } =
         Nothing ->
             LoginPage Login.initEmpty => Cmd.none
     )
+        |> T.mapFirst (\state -> { route = About, state = state })
         |> T.mapSecond (\cmds -> Cmd.batch [ cmds, Ports.ready () ])
 
 
@@ -47,11 +58,33 @@ init { data } =
 type Msg
     = LoginMsg Login.Msg
     | UnreadMsg Unread.Msg
+    | NavigateTo Route
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case ( msg, model ) of
+update msg ({ route, state } as model) =
+    case ( msg, route ) of
+        ( NavigateTo Bookmarks, About ) ->
+            { model | route = Bookmarks } => Cmd.none
+
+        ( NavigateTo About, Bookmarks ) ->
+            { model | route = About } => Cmd.none
+
+        ( _, Bookmarks ) ->
+            updateBookmarksState msg state
+                |> T.mapFirst (\state -> { route = Bookmarks, state = state })
+
+        _ ->
+            let
+                _ =
+                    Debug.log "SKIPPED ACTION" msg
+            in
+                model => Cmd.none
+
+
+updateBookmarksState : Msg -> BookmarksState -> ( BookmarksState, Cmd Msg )
+updateBookmarksState msg state =
+    case ( msg, state ) of
         ( LoginMsg msg, LoginPage data ) ->
             case Login.update msg data of
                 ( data, Login.Idle ) ->
@@ -81,12 +114,12 @@ update msg model =
                 ( _, Unread.LogOut ) ->
                     LoginPage Login.initEmpty => Ports.logOut ()
 
-        ( action, _ ) ->
+        ( action, state ) ->
             let
                 _ =
                     Debug.log "SKIPPED ACTION" action
             in
-                model => Cmd.none
+                state => Cmd.none
 
 
 
@@ -94,7 +127,7 @@ update msg model =
 
 
 view : Model -> Html Msg
-view model =
+view { route, state } =
     div [ class "app" ]
         [ header [ class "app-header" ]
             [ div [ class "app-header-content" ]
@@ -104,15 +137,30 @@ view model =
                     ]
                 ]
             ]
-        , section [ class "app-body" ]
-            [ case model of
-                LoginPage data ->
-                    Html.map LoginMsg <| Login.viewLogin data
+        , Keyed.node "section" [ class "app-body" ] <|
+            [ page "about" (route == About) About.view
+            , page "login"
+                (route == Bookmarks)
+                (case state of
+                    LoginPage data ->
+                        Html.map LoginMsg <| Login.viewLogin data
 
-                UnreadPage data ->
-                    Html.map UnreadMsg <| Unread.view data
+                    UnreadPage data ->
+                        Html.map UnreadMsg <| Unread.view data
+                )
+            ]
+        , section [ class "app-bottom-navigation" ]
+            [ section [ class "app-bottom-navigation-content" ]
+                [ bookmarksBtn (route == Bookmarks) (NavigateTo Bookmarks)
+                , aboutBtn (route == About) (NavigateTo About)
+                ]
             ]
         ]
+
+
+page : a -> Bool -> Html msg -> ( a, Html msg )
+page key active html =
+    ( key, div [ class "page", classList [ ( "active", active ) ] ] [ html ] )
 
 
 main : Program Flags Model Msg

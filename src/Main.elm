@@ -70,16 +70,12 @@ update msg ({ route, state } as model) =
         ( NavigateTo About, Bookmarks ) ->
             { model | route = About } => Cmd.none
 
-        ( _, Bookmarks ) ->
+        -- Pass the rest of msgs to update the bookmarks state regardless of
+        -- which tab you are seeing, so that background work on the bookmarks
+        -- page still gets processed and updates state and the DOM
+        ( _, _ ) ->
             updateBookmarksState msg state
-                |> T.mapFirst (\state -> { route = Bookmarks, state = state })
-
-        _ ->
-            let
-                _ =
-                    Debug.log "SKIPPED ACTION" msg
-            in
-                model => Cmd.none
+                |> T.mapFirst (\state -> { model | state = state })
 
 
 updateBookmarksState : Msg -> BookmarksState -> ( BookmarksState, Cmd Msg )
@@ -117,7 +113,7 @@ updateBookmarksState msg state =
         ( action, state ) ->
             let
                 _ =
-                    Debug.log "SKIPPED ACTION" action
+                    Debug.log "SKIPPED ACTION when updating bookmarks state" action
             in
                 state => Cmd.none
 

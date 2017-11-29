@@ -4,3 +4,4 @@
 * Bottom navigation tweaks
   * Fix spacing (too much?)
   * Make font-size animation slower
+* Hide top and bottom navigation on scroll down and show them back on scroll up
